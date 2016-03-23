@@ -1,5 +1,7 @@
-package seagrass_Model_V1.Controller;
+package controller;
 
+import java.awt.Dimension;
+import java.awt.geom.Line2D;
 import java.io.BufferedOutputStream;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -13,10 +15,12 @@ import java.util.ArrayList;
 import java.util.Random;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import seagrass_Model_V1.Model.Cell;
-import seagrass_Model_V1.Model.Field;
-import seagrass_Model_V1.Model.Location;
-import seagrass_Model_V1.Model.Seagrass;
+import model.Cell;
+import model.Field;
+import model.Location;
+import model.Seagrass;
+import model.SimulationOptions;
+import view.SimulationView;
 
 /**
  * The Simulation class for the Halophila johnsonii individual based model
@@ -32,12 +36,15 @@ import seagrass_Model_V1.Model.Seagrass;
  */
 public class Simulation {
 	
-	private final int XLENGTH = 150;				//Distance along the shoreline 	(was NROW)
-	private final int YLENGTH = 50;					//Distance from the shoreline	(was NCOL)
-	private final int MAX_NODES = 500000;			//Maximum number of nodes for the simulation
+	//Attributes that are set from SimulationOptions class
+	private final int XLENGTH;						//Distance along the shoreline 	(was NROW)
+	private final int YLENGTH;						//Distance from the shoreline	(was NCOL)
+	private final int MAX_NODES;					//Maximum number of nodes for the simulation
+	private final int numberOfRecuits;				//number of starting nodes
+	
+	//Attributes that are hard coded
 	private final double SEAFLOOR_SLOPE = 0.01;		//The slope of the seafloor from the shore
 	private final double LIGHT_ATTENUATION = 0.035;	//light attenuation coefficient due to everything but shading by other seagrasses
-	private final Random rng = new Random();		//Random number generator
 	
 	//file writers
 	private PrintStream LIGHTOUTPUT;
@@ -47,41 +54,48 @@ public class Simulation {
 	private PrintStream DEPTHOUTPUT;
 	private PrintStream DAILYOUTPUT;
 	
+	//Data structures
 	private ArrayList<Seagrass> population;			//population of seagrass
 	private ArrayList<Seagrass> perishedPopulation;	//dead population of seagrass
 	private int[] nodesCreateOnDay;					//int array that holds the number of nodes born on the given day(index)
 	//private Cell[][] field;
+	private Field field;							//Field of cells for the simulation
 	
+	//counters
 	private int dayCounter;							//counts the days of the simulation
 	private int yearCounter;						//counts the years of the simulation
 	private int runningIDCounter;					//holds the value that represents the next available id 
-	private int numberOfRecuits;					//number of starting nodes
-	private Field field;							//Field that holds all of our individual nodes
-	private int numNodesCreatedToday;				//
+	private int numNodesCreatedToday;				//Counts the number of nodes that were created on the day
 	
-
+	//Extra utilities required
+	private SimulationView simView;					//simulation view that is needed to repaint the nodes
+	private SimulationOptions simOptions;			//holds the changeable options for this run of the simulation
+	private final Random rng = new Random();		//Random number generator
 	
-	
-	public Simulation() {
+	public Simulation(SimulationOptions simOptions) {
+		this.simOptions = simOptions;
+		
+		//Setup Counters
+		dayCounter = 0;
+		yearCounter = 0;
+		numNodesCreatedToday = 0;
+		
+		//Setup Variable Options
+		numberOfRecuits = 	simOptions.getNumRecruits();
+		XLENGTH 		= 	simOptions.getxLength();				
+		YLENGTH 		= 	simOptions.getyLength();				
+		MAX_NODES 		= 	simOptions.getMaxNodes();	
+		
+		//setup field and population arrays
 		field = new Field(XLENGTH,YLENGTH);
 		population = new ArrayList<Seagrass>();
 		perishedPopulation = new ArrayList<Seagrass>();
-		//field = new Cell[XLENGTH][YLENGTH];
-		dayCounter = 0;
-		yearCounter = 0;
-		numberOfRecuits = 5;
-		numNodesCreatedToday = 0;
 	
 		setPrintStreams();
-		
-		//System.setOut(new BufferedWriter(new FileWriter(new File("Output.txt"))));
-			
-//		try {
-//			System.setOut(new PrintStream(new BufferedOutputStream(new FileOutputStream("output.txt"))));
-//		} catch (FileNotFoundException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
+	}
+	
+	public void setSimView(SimulationView simView){
+		this.simView = simView;
 	}
 	
 	private void setPrintStreams() {
@@ -96,12 +110,20 @@ public class Simulation {
 			e.printStackTrace();
 		}
 	}
+	
+	/**
+	 * Runs the simulation with the length of time set by the SimulationOptions class
+	 * @throws Exception Throws an Exception if the user wants to stop the simulation, stopping the thread
+	 */
+	public void runSimulation() throws Exception{
+		int numberYears = simOptions.getNumberYears();
+		int numberDays = simOptions.getNumberDays();
+		runSimulation(numberYears, numberDays);
+	}
 
 	/**
 	 * This method will run the simulation for the amount of time designated by the user.
-	 * TODO:Implement running of the simulation.
-	 * 		Implement growth of node
-	 * @throws Exception 
+	 * @throws Exception Throws an Exception if the user wants to stop the simulation, stopping the thread
 	 */
 	public void runSimulation(int years, int days) throws Exception{
 		printHeaders();
@@ -126,7 +148,7 @@ public class Simulation {
 			
 			//print current population every month
 			if(dayCounter % 30 == 0){
-				dailyOut();
+				//dailyOut();
 			}
 			
 			//prints the current year, day, population size, perished population size, and number of nodes created today.
@@ -138,7 +160,12 @@ public class Simulation {
 //								+ " Dead Population " + perishedPopulation.size() + " Nodes Created Today: " + numNodesCreatedToday);
 			
 			//increment the day
+			System.out.println(dayCounter);
 			dayCounter++;
+			simView.repaint();
+			Thread.sleep(30);
+			
+			
 		}
 		
 		System.out.println("All Done");
@@ -171,19 +198,18 @@ public class Simulation {
 			Location randLoc = new Location(randomX, randomY);
 	
 										//ID, age, Location, isApical, angle, MotherID)
-			population.add(new Seagrass(runningIDCounter, 1, randLoc, true, 0.0, runningIDCounter));
+			population.add(new Seagrass(runningIDCounter, 1, randLoc, true, 0.0, runningIDCounter, Seagrass.PRIMARYAXIS));
 			runningIDCounter++;
 		}
+		
+		//for testing zoom
+		Location loc = new Location(1, 1);
+		population.add(new Seagrass(runningIDCounter, 1, loc, true, 0.0, runningIDCounter, Seagrass.PRIMARYAXIS));
 		
 	}
 
 	/**
-	 * TODO:get cords for node
-	 * 		get cell respective of cords
-	 * 		get light for cell on this day
-	 * 		pass light to the node's growth method
-	 * 		if return true == call method that makes new node
-	 * 		else continue
+	 * TODO:
 	 * 
 	 * 
 	 * 		Notes
@@ -194,8 +220,9 @@ public class Simulation {
 		//create a queue that will hold the nodes created today
 		LinkedBlockingQueue<Seagrass> newNodesForTheDay = new LinkedBlockingQueue<Seagrass>(); 
 		LinkedBlockingQueue<Seagrass> perishedNodesForTheDay = new LinkedBlockingQueue<Seagrass>(); 
+		int populationSize = population.size();
 		
-		for(int i = 0; i < population.size(); i++){
+		for(int i = 0; i < populationSize; i++){
 			//Get the current node to work with and its location
 			Seagrass node = population.get(i);
 			Location location = node.getLocation();
@@ -211,51 +238,55 @@ public class Simulation {
 				
 				
 				//if the population reaches the max, stop the adding process
-				if(population.size() >= MAX_NODES){
+				if(populationSize >= MAX_NODES){
 					System.out.println("reached Max Nodes");
 					throw new Exception();
 				} else {
 					
-					//time to make a new node!
-					double theta;
+//					//time to make a new node!
+//					double theta;
+//					
+//					//if the node is apical, continue the path of growth
+//					if(node.isApical()){
+//						theta = node.getAngleOfCreation();
+//					} else {
+//						theta = rng.nextDouble() * 2.0 * Math.PI;
+//					}
+//					
+//					//get the adjacent and opposite lengths for theta using the distance from the mother.
+//					double adj = Math.cos(theta) * node.getDistanceFromMother();		//distance on the X axis
+//					double opp = Math.sin(theta) * node.getDistanceFromMother();		//distance on the Y axis
+//					
+////					if(dayCounter == 15){
+////						//print some information
+////					}
+//					
+//					//add the opp and adj to the mothers location to create the new nodes coordinates 
+//					double newNodeX = location.getxLocation() + adj;
+//					double newNodeY = location.getyLocation() + opp;
+//					
+//					//'bounce' the node away from the edge of the field.
+//					//unsure if this will change or stay in.
+//					if(newNodeX > XLENGTH || newNodeX < 0){
+//						newNodeX = newNodeX + (2 * (-adj));
+//					}
+//					if(newNodeY > YLENGTH || newNodeY < 0){
+//						newNodeY = newNodeY + (2 * (-opp));
+//					}
+//					
+//					Location newLoc = new Location(newNodeX, newNodeY);
+//					newNodesForTheDay.add(new Seagrass(runningIDCounter, dayCounter, newLoc, true, theta, node.getID(), null));
+//					
+//					if(node.isApical()){
+//						node.setApical(false);
+//						node.setChildLocation(newLoc);
+//					} else if(!node.isHasBranched()){
+//						node.setHasBranched(true);
+//						node.setBranchChildLocation(newLoc);
+//					}
+//					node.setDevelopmentProgress(0.0);
 					
-					//if the node is apical, continue the path of growth
-					if(node.isApical()){
-						theta = node.getAngleOfCreation();
-					} else {
-						theta = rng.nextDouble() * 2.0 * Math.PI;
-					}
-					
-					//get the adjacent and opposite lengths for theta using the distance from the mother.
-					double adj = Math.cos(theta) * node.getDistanceFromMother();		//distance on the X axis
-					double opp = Math.sin(theta) * node.getDistanceFromMother();		//distance on the Y axis
-					
-					if(dayCounter == 15){
-						//print some information
-					}
-					
-					//add the opp and adj to the mothers location to create the new nodes coordinates 
-					double newNodeX = location.getxLocation() + adj;
-					double newNodeY = location.getyLocation() + opp;
-					
-					//'bounce' the node away from the edge of the field.
-					//unsure if this will change or stay in.
-					if(newNodeX > XLENGTH || newNodeX < 0){
-						newNodeX = newNodeX + (2 * (-adj));
-					}
-					if(newNodeY > YLENGTH || newNodeY < 0){
-						newNodeY = newNodeY + (2 * (-opp));
-					}
-					
-					Location newLoc = new Location(newNodeX, newNodeY);
-					newNodesForTheDay.add(new Seagrass(runningIDCounter, dayCounter, newLoc, true, theta, node.getId()));
-					
-					if(node.isApical()){
-						node.setApical(false);
-					} else if(!node.isHasBranched()){
-						node.setHasBranched(true);
-					}
-					node.setDevelopmentProgress(0.0);
+					newNodesForTheDay.add(node.createChild(XLENGTH, YLENGTH, runningIDCounter, dayCounter));
 					runningIDCounter++;
 					numNodesCreatedToday++;
 				}
@@ -382,6 +413,8 @@ public class Simulation {
 //				ELEVATIONOUTPUT.println("CellX: " + currentX + "CellY: " + currentY + "Elevation: " + cell.getElevation());
 			}
 		}
+		
+		//DrawGrid
 	}
 
 	/**
@@ -428,12 +461,20 @@ public class Simulation {
 	private double calculateSurfaceLight(int day){
 		return 0.9;
 	}
+
+	public Dimension getDimension() {
+		// TODO Auto-generated method stub
+		return new Dimension(XLENGTH, YLENGTH);
+	}
+
+	public ArrayList<Seagrass> getPopulation() {
+		return population;
+	}
 	
 //	private void setOutputFile(String fileName){
 //		try {
 //			System.setOut(new PrintStream(new File(fileName)));
 //		} catch (FileNotFoundException e) {
-//			// TODO Auto-generated catch block
 //			e.printStackTrace();
 //		}
 //	}

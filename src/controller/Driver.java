@@ -1,10 +1,11 @@
-package seagrass_Model_V1.Controller;
+package controller;
 
-import seagrass_Model_V1.View.MainGUI;
+import view.MainGUI;
 
 public class Driver {
 
 	public static void main(String[] args) throws Exception {
+		System.setProperty("sun.java2d.opengl", "true");
 		MainGUI menuGUI = new MainGUI();
 		
 		//Simulation sim = new Simulation();

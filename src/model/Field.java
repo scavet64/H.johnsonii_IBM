@@ -1,4 +1,4 @@
-package seagrass_Model_V1.Model;
+package model;
 
 public class Field {
 

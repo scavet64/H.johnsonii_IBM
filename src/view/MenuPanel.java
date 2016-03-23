@@ -1,4 +1,4 @@
-package seagrass_Model_V1.View;
+package view;
 
 import java.awt.Color;
 import java.awt.Component;
@@ -15,7 +15,7 @@ import javax.swing.SwingConstants;
 
 public class MenuPanel extends JPanel {
 	
-	private static final Dimension BUTTON_SIZE = new Dimension(200, 25);
+	private final Dimension BUTTON_SIZE = new Dimension(200, 25);
 	
 	// Buttons
 	private JButton runSimButton, editOptionsButton, viewPrevButton, quitButton;
@@ -84,7 +84,7 @@ public class MenuPanel extends JPanel {
 	 */
 	protected void paintComponent(Graphics g1) {
 		super.paintComponent(g1);
-		//g1.drawImage(new ImageIcon("images//menuBackground.png").getImage(), 0, 0, null);
+		g1.drawImage(new ImageIcon("images//menuBackground.png").getImage(), 0, 0, null);
 	}
 
 	/**

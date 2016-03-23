@@ -1,4 +1,4 @@
-package seagrass_Model_V1.Model;
+package model;
 
 /**
  * The Cell class for the Halophila Johnsonii individual based model.

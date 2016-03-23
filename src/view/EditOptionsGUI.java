@@ -1,4 +1,4 @@
-package seagrass_Model_V1.View;
+package view;
 
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
@@ -10,13 +10,13 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 
-import seagrass_Model_V1.Model.Attribute;
-import seagrass_Model_V1.Model.SimulationOptions;
+import model.Attribute;
+import model.SimulationOptions;
 
 public class EditOptionsGUI extends JPanel {
 	
 	private final int NUMBER_ROWS = 10;
-	private final int NUMBER_COL = 5;
+	private final int NUMBER_COL = 1;
 	private final SimulationOptions simOptions;
 	private JButton finishButton;
 	private JPanel fields;
@@ -36,9 +36,10 @@ public class EditOptionsGUI extends JPanel {
 					FieldPanel fp = (FieldPanel) fields.getComponent(i);
 					try {
 						double value = fp.getDoubleFromBox();
-						System.out.println("button pressed");
+						//System.out.println("button pressed");
 						simOptions.applyModification(fp.getEditableAttributes(), value);
 					} catch(NumberFormatException nfe){
+						nfe.printStackTrace();
 						//wrong format error
 					} catch(Exception ex){
 						//no number error
@@ -60,6 +61,7 @@ public class EditOptionsGUI extends JPanel {
 		fields.add(new FieldPanel(Attribute.NumDays, simOptions.getNumberDays()));
 		fields.add(new FieldPanel(Attribute.NumYears, simOptions.getNumberYears()));
 		fields.add(new FieldPanel(Attribute.NumRecruits, simOptions.getNumRecruits()));
+		fields.add(new FieldPanel(Attribute.MaxNodes, simOptions.getMaxNodes()));
 		
 		//setup button panel on bottom
 		JPanel buttonsPanel = new JPanel();

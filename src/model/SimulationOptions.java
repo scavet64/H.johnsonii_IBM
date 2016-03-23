@@ -1,12 +1,14 @@
-package seagrass_Model_V1.Model;
+package model;
 
 public class SimulationOptions {
 	
-	private int xLength = 150;
-	private int yLength = 50;
-	private int numberDays = 100;
-	private int numberYears = 0;
-	private int numRecruits = 5;
+	//Default Options
+	private int xLength = 150;				//Distance along the shoreline 	(was NROW)
+	private int yLength = 50;				//Distance from the shoreline	(was NCOL)
+	private int numberDays = 100;			//number of days to run the simulation
+	private int numberYears = 0;			//number of years to run the simulation
+	private int numRecruits = 1;			//number of starting nodes
+	private int maxNodes = 500000;			//Maximum number of nodes for the simulation
 	private static SimulationOptions singleInstance;
 
 	private SimulationOptions(){
@@ -20,9 +22,8 @@ public class SimulationOptions {
 		return singleInstance;
 	}
 	
-	public void applyModification(Attribute ea, double value){
+	public boolean applyModification(Attribute ea, double value){
 		boolean success = true;
-		System.out.println(ea);
 		switch(ea){
 		case NumDays:
 			this.numberDays = (int) value;
@@ -39,10 +40,14 @@ public class SimulationOptions {
 		case NumRecruits:
 			this.numRecruits = (int) value;
 			break;
+		case MaxNodes:
+			this.maxNodes = (int) value;
+			break;
 		default:
 			success = false;
 			break;
 		}
+		return success;
 	}
 
 	/**
@@ -127,6 +132,10 @@ public class SimulationOptions {
 	 */
 	public void setSingleInstance(SimulationOptions singleInstance) {
 		this.singleInstance = singleInstance;
+	}
+
+	public int getMaxNodes() {
+		return maxNodes;
 	}
 
 	

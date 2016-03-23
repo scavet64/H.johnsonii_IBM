@@ -1,7 +1,7 @@
 /**
  * 
  */
-package seagrass_Model_V1.View;
+package view;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -12,6 +12,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 import javax.imageio.ImageIO;
 import javax.swing.JButton;
@@ -21,9 +22,9 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 
-
-import seagrass_Model_V1.Controller.Menu;
-import seagrass_Model_V1.Model.SimulationOptions;
+import controller.Menu;
+import controller.Simulation;
+import model.SimulationOptions;
 
 /**
  * @author Vincent Scavetta
@@ -105,7 +106,7 @@ public class MainGUI extends JFrame {
 		setLocation(650, 250);
 		errorLabel.setText("");
 		setSize(PREFERRED_SIZE);
-		topLabel.setText("Main Menu");
+		topLabel.setText("Halophila johnsonii IBM");
 		topLabel.setForeground(Color.WHITE);
 		errorLabel.setText(" ");
 		MenuPanel menuPanel = new MenuPanel();
@@ -117,7 +118,8 @@ public class MainGUI extends JFrame {
 				switch(button.getText()){
 
 				case "Run Simulation":
-					//initializeSimulationGUI();
+					mainPanel.remove(menuPanel);
+					initializeSimulationGUI();
 					break;
 
 				case "Change Simulation Options":
@@ -156,8 +158,8 @@ public class MainGUI extends JFrame {
 
 	private void initializeEditOptionsGUI() {
 		topLabel.setText("Edit Simulation Options");
-		setLocation(450, 200);
-		setSize(new Dimension(850,750));
+		//setLocation(450, 200);
+		setSize(new Dimension(400,400));
 		
 		//Adds the gui to the center
 		
@@ -170,8 +172,18 @@ public class MainGUI extends JFrame {
 	}
 
 	private void initializeSimulationGUI() {
-		// TODO Auto-generated method stub
-		
+		topLabel.setText("Simulation");
+		setLocation(0, 50);
+		setSize(new Dimension(1900,1000));
+		finishButton.setText("Finish Editing");
+		Simulation sim = new Simulation(simulationOptions);
+		SimulationGUI simGUI = new SimulationGUI(sim, finishButton);
+		this.activeCenterPanel = simGUI;
+		mainPanel.add(simGUI, BorderLayout.CENTER);
+		//simView.runSim();
+		//testing thread
+		//SimulationThread simthread = new SimulationThread(sim);
+		//simthread.start();
 	}
 
 	private void setIcon() {
@@ -182,6 +194,37 @@ public class MainGUI extends JFrame {
 		}
 		
 	}
+	
+	
+	
+//	class SimulationThread extends Thread{
+//		
+//		Simulation sim;
+//		
+//		public SimulationThread(Simulation sim){
+//			this.sim = sim;
+//		}
+//        
+//		public void run()
+//        {
+//			try {
+//				sim.runSimulation(0, 200);
+//				pause();
+//			} catch (Exception e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+//        }
+//        
+//        private void pause()
+//        {
+//            try {
+//                Thread.sleep(3000);   // pause for 3000 milliseconds
+//            }
+//            catch (InterruptedException exc) {
+//            }
+//        }
+//	}
 
 
 }
