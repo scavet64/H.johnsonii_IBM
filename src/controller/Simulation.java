@@ -148,7 +148,7 @@ public class Simulation {
 			
 			//print current population every month
 			if(dayCounter % 30 == 0){
-				//dailyOut();
+				dailyOut();
 			}
 			
 			//prints the current year, day, population size, perished population size, and number of nodes created today.
@@ -163,7 +163,7 @@ public class Simulation {
 			System.out.println(dayCounter);
 			dayCounter++;
 			simView.repaint();
-			Thread.sleep(30);
+			Thread.sleep(100);
 			
 			
 		}
@@ -285,10 +285,19 @@ public class Simulation {
 //						node.setBranchChildLocation(newLoc);
 //					}
 //					node.setDevelopmentProgress(0.0);
-					
-					newNodesForTheDay.add(node.createChild(XLENGTH, YLENGTH, runningIDCounter, dayCounter));
-					runningIDCounter++;
-					numNodesCreatedToday++;
+					if(!node.isApical()){
+						if(rng.nextInt(100) > 50){
+							newNodesForTheDay.add(node.createChild(XLENGTH, YLENGTH, runningIDCounter, dayCounter));
+							runningIDCounter++;
+							numNodesCreatedToday++;
+						} else {
+							node.setDevelopmentProgress(0);
+						}
+					} else {
+						newNodesForTheDay.add(node.createChild(XLENGTH, YLENGTH, runningIDCounter, dayCounter));
+						runningIDCounter++;
+						numNodesCreatedToday++;
+					}
 				}
 			}
 			

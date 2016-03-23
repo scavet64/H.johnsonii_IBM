@@ -43,6 +43,7 @@ public class SimulationView extends JPanel {
 	private BasicStroke thinStroke = new BasicStroke(1);
 	private AffineTransform at = new AffineTransform();
 	private boolean zooming;
+	private int startingScale = 1000;
 	
 	
 	private ArrayList<Seagrass> population;	
@@ -58,8 +59,8 @@ public class SimulationView extends JPanel {
 		
 		population = simulation.getPopulation();
 		
-		xLength = (int) simDimension.getWidth() * 100;
-		yLength = (int) simDimension.getHeight() * 100 ;
+		xLength = (int) simDimension.getWidth() * startingScale;
+		yLength = (int) simDimension.getHeight() * startingScale ;
 		this.setBackground(Color.white);
 		updateUI();
 		
@@ -217,12 +218,12 @@ public class SimulationView extends JPanel {
         graphics.setColor(Color.black);
         
         
-        for(int x = OFFSET; x <= xLength+OFFSET; x=x+100){
+        for(int x = OFFSET; x <= xLength+OFFSET; x=x+startingScale){
         	graphics.setStroke(boldStroke);
         	graphics.drawLine(x, OFFSET, x, yLength+OFFSET);
         }
         
-        for(int y = 0; y <= yLength+OFFSET; y=y + 100){
+        for(int y = 0; y <= yLength+OFFSET; y=y + startingScale){
         	graphics.drawLine(OFFSET, y, xLength+OFFSET, y);
         }
         graphics.setStroke(thinStroke);
@@ -231,15 +232,15 @@ public class SimulationView extends JPanel {
         while(!finishedWrite){
         try{
 	        for(Seagrass seagrass: population){
-	        	double seagrassX = seagrass.getLocation().getxLocation() * 100;
-				double seagrassY = seagrass.getLocation().getyLocation() * 100;
+	        	double seagrassX = seagrass.getLocation().getxLocation() * startingScale;
+				double seagrassY = seagrass.getLocation().getyLocation() * startingScale;
 	        	graphics.setColor(Color.green);
 	        	g1.drawOval((int)seagrassX + OFFSET , (int)seagrassY + OFFSET, 1, 1);
 	        	Location cl = seagrass.getChildLocation();
 	        	if(cl != null){
 	        		
-	        		double seagrassChildX = cl.getxLocation() * 100;
-	        		double seagrassChildY = cl.getyLocation() * 100;
+	        		double seagrassChildX = cl.getxLocation() * startingScale;
+	        		double seagrassChildY = cl.getyLocation() * startingScale;
 	        		
 	        		graphics.setColor(Color.CYAN);
 	        		graphics.drawLine((int) seagrassX, (int)seagrassY, (int)seagrassChildX, (int)seagrassChildY);
@@ -247,8 +248,8 @@ public class SimulationView extends JPanel {
 	        	Location bcl = seagrass.getBranchChildLocation();
 	        	if(bcl != null){
 	        		
-	        		double seagrassChildX = bcl.getxLocation() * 100;
-	        		double seagrassChildY = bcl.getyLocation() * 100;
+	        		double seagrassChildX = bcl.getxLocation() * startingScale;
+	        		double seagrassChildY = bcl.getyLocation() * startingScale;
 	        		
 	        		graphics.setColor(Color.ORANGE);
 	        		graphics.drawLine((int) seagrassX, (int)seagrassY, (int)seagrassChildX, (int)seagrassChildY);

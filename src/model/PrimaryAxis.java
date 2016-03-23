@@ -1,18 +1,24 @@
 package model;
 
+/**
+ * This class represents the PrimaryAxis growth strategy.
+ * The values were calculated using image analysis on the H.johnsonii experimental growth maps.
+ * @author Vincent Scavetta
+ * @version 3/22/16
+ */
 public class PrimaryAxis extends GrowthAxis {
 	
-	public PrimaryAxis(){
-		this.branchingMean 		= 0;
-		this.branchingSD 		= 0;
-		this.nonBranchingMean 	= 0;
-		this.nonBranchingSD 	= 0;
+	private GrowthAxis nextAxis = new SecondaryAxis();
+	
+	public PrimaryAxis() {
+		//branchingMean, BranchingSD, nonbranchingMean, nonbranchingSD
+		super(89.27, 26.3, 0, 10.35);
 	}
 
 	@Override
 	public GrowthAxis getNextAxis() {
 		// TODO Auto-generated method stub
-		return new SecondaryAxis();
+		return nextAxis;
 	}
 
 }
