@@ -1,4 +1,4 @@
-package seagrass_Model_V1.View;
+package view;
 
 import java.awt.Component;
 import java.awt.Dimension;
@@ -9,7 +9,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 
-import seagrass_Model_V1.Model.Attribute;
+import model.Attribute;
 
 public class FieldPanel extends JPanel {
 	

@@ -1,6 +1,6 @@
-package seagrass_Model_V1.Controller;
+package controller;
 
-import seagrass_Model_V1.Model.SimulationOptions;
+import model.SimulationOptions;
 
 public class Menu {
 	

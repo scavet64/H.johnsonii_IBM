@@ -1,11 +1,12 @@
-package seagrass_Model_V1.Model;
+package model;
 
 public enum Attribute {
 	XLength ("XLength"),
 	YLength ("YLength"),
 	NumDays ("Number of Days"),
 	NumYears ("Number of Years"),
-	NumRecruits ("Number of Recruits");
+	NumRecruits ("Number of Recruits"),
+	MaxNodes ("Max Number of Nodes");
 	
 	String name;
 	
