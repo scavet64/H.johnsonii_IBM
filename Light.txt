@@ -1,1 +1,0 @@
-CurrentDay 	 Xlocation 	 YLocation 	LightLevel
