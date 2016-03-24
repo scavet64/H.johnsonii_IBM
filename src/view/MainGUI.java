@@ -59,7 +59,7 @@ public class MainGUI extends JFrame {
 		this.menu = menu;
 		//setResizable(false);
 		
-		//setIcon();
+		setIcon();
 		
 		//creates the actionListener to return to the main menu
 		ActionListener finishListener = new ActionListener() {
@@ -188,7 +188,7 @@ public class MainGUI extends JFrame {
 
 	private void setIcon() {
 		try {
-			this.setIconImage(ImageIO.read(new File("Images\\icon.png")));
+			this.setIconImage(ImageIO.read(new File("Images\\icon2.png")));
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}

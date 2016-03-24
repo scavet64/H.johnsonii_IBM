@@ -11,8 +11,8 @@ public class PrimaryAxis extends GrowthAxis {
 	private GrowthAxis nextAxis = new SecondaryAxis();
 	
 	public PrimaryAxis() {
-		//branchingMean, BranchingSD, nonbranchingMean, nonbranchingSD
-		super(89.27, 26.3, 0, 10.35);
+		//branchingMean, BranchingSD, nonbranchingMean, nonbranchingSD, Units
+		super(89.27, 26.3, 0, 10.35, GrowthAxis.DEGREES);
 	}
 
 	@Override

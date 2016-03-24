@@ -241,6 +241,9 @@ public class Seagrass {
 				+ angleOfCreation + ", distanceForNewNode=" + distanceForNewNode + ", motherID=" + motherID
 				+ ", developmentProgress=" + developmentProgress + "]";
 	}
+	
+	
+	/***********************Setters and getters***********************/
 
 
 	/**

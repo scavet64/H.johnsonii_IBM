@@ -44,7 +44,7 @@ public class Simulation {
 	
 	//Attributes that are hard coded
 	private final double SEAFLOOR_SLOPE = 0.01;		//The slope of the seafloor from the shore
-	private final double LIGHT_ATTENUATION = 0.035;	//light attenuation coefficient due to everything but shading by other seagrasses
+	private double LIGHT_ATTENUATION = 0.2;			//light attenuation coefficient due to everything but shading by other seagrasses
 	
 	//file writers
 	private PrintStream LIGHTOUTPUT;
@@ -285,8 +285,11 @@ public class Simulation {
 //						node.setBranchChildLocation(newLoc);
 //					}
 //					node.setDevelopmentProgress(0.0);
+					
+					//this will determine if the node is branching or continuing on its axis
+					//If branching, there is a chance it may not occur
 					if(!node.isApical()){
-						if(rng.nextInt(100) > 50){
+						if(rng.nextInt(100) < 25){
 							newNodesForTheDay.add(node.createChild(XLENGTH, YLENGTH, runningIDCounter, dayCounter));
 							runningIDCounter++;
 							numNodesCreatedToday++;
@@ -442,7 +445,7 @@ public class Simulation {
 	 * @param cell The cell that will be modified
 	 */
 	private void assignOtherSpecies(Cell cell){
-		cell.setBioMass(0.5);
+		cell.setBioMass(1);
 	}
 	
 	/**
@@ -470,6 +473,19 @@ public class Simulation {
 	private double calculateSurfaceLight(int day){
 		return 0.9;
 	}
+	
+	/**
+	 * Function will assign the light attenuation (for the passed in day)??
+	 * TODO: implement more functionality
+	 * Ideas: 	have the attenuation fluctuate around a particular value and increase or decrease minimally
+	 * 			have rare days where the attenuation will increase drastically to simulate when cedar water is released
+	 * 
+	 */
+	private void assignLightAttenuationForDay(int day){
+		
+	}
+	
+	/***********************Setters and getters***********************/
 
 	public Dimension getDimension() {
 		// TODO Auto-generated method stub

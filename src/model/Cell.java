@@ -41,6 +41,9 @@ public class Cell {
 		this.waterDepth = this.elevation - this.waterLevel;
 	}
 
+	
+	/***********************Setters and getters***********************/
+	
 	/**
 	 * @return the elevation
 	 */

@@ -9,8 +9,8 @@ package model;
 public class SecondaryAxis extends GrowthAxis {
 
 	public SecondaryAxis() {
-		//branchingMean, BranchingSD, nonbranchingMean, nonbranchingSD
-		super(72.00, 33.62, 0, 21.19);
+		//branchingMean, BranchingSD, nonbranchingMean, nonbranchingSD, Units
+		super(72.00, 33.62, 0, 21.19, GrowthAxis.DEGREES);
 	}
 
 	@Override
