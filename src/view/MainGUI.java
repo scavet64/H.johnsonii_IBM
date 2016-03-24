@@ -43,7 +43,7 @@ public class MainGUI extends JFrame {
 	private static final int MAX_WIDTH = 510;
 	private static final int MAX_HIGHT = 510;
 	private static final Dimension MAX_SIZE = new Dimension(MAX_WIDTH,MAX_HIGHT);
-	private Menu menu;
+	//private Menu menu;
 	private SimulationOptions simulationOptions;
 	private JPanel mainPanel = new JPanel();
 	private JLabel topLabel = new JLabel();
@@ -56,7 +56,7 @@ public class MainGUI extends JFrame {
 	 */
 	public MainGUI() {
 		simulationOptions = SimulationOptions.getInstance();
-		this.menu = menu;
+		//this.menu = menu;
 		//setResizable(false);
 		
 		setIcon();

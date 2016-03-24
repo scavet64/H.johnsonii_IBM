@@ -168,6 +168,8 @@ public class Simulation {
 			
 		}
 		
+		//calculate density and report for each recruit
+		
 		System.out.println("All Done");
 		
 	}
@@ -482,6 +484,34 @@ public class Simulation {
 	 * 
 	 */
 	private void assignLightAttenuationForDay(int day){
+		
+	}
+	
+	/**
+	 * Calculates the density for a given patch
+	 * TODO iterate through patch and find the cells it resides in (2D-Array of cells??) (Maybe a X -> Y -> Cell map??)
+	 * 		Calculate the density for each cell
+	 * 			For every node in the patch, 
+	 * 		Take average of each density and standard Deviation
+	 * 
+	 */
+	private void calculateDensityForPatches(){
+		
+	}
+	/**
+	 * Returns an array of patches from the population
+	 * TODO How?
+	 * 		Run though each cell
+	 */
+	private void getPatchesFromPopulation(){
+		
+	}
+	
+	/**
+	 * Alternative to finding patches using iteration though field rather than population
+	 * 
+	 */
+	private void getPatchesFromCells(){
 		
 	}
 	
