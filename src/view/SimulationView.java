@@ -52,7 +52,6 @@ public class SimulationView extends JPanel {
 	public SimulationView(Simulation simulation){
 		
 		//this.simulation = simulation;
-		simulation.setSimView(this);
 		Dimension simDimension = simulation.getDimension();
 		//xLength = 150 * 10;
 		//yLength = 50 * 10;

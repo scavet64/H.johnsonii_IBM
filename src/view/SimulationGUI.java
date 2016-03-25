@@ -13,6 +13,7 @@ public class SimulationGUI extends JPanel{
 
 	private SimulationView simView;
 	private ControlPanel controlPanel;
+	private StatPanel statPanel;
 	private SimulationThread thread;
 	private boolean isPaused;
 	private boolean hasStarted;
@@ -27,12 +28,15 @@ public class SimulationGUI extends JPanel{
 		this.thread = new SimulationThread(sim);
 		
 		controlPanel = new ControlPanel(finishButton);
-		
+		statPanel = new StatPanel();
 		this.simView = new SimulationView(sim);
+		
+		sim.setSimGUI(this);
 		
 		this.setLayout(new BorderLayout());
 		this.add(simView, BorderLayout.CENTER);
 		this.add(controlPanel, BorderLayout.EAST);
+		this.add(statPanel, BorderLayout.NORTH);
 		
 		ActionListener startSim = new ActionListener(){
 
@@ -86,6 +90,14 @@ public class SimulationGUI extends JPanel{
 		controlPanel.getStopButton().addActionListener(stopSim);
 	}
 	
+	public void updateDayLabel(int dayCounter){
+		statPanel.updateDayLabel(dayCounter);
+	}
+	
+	public void updatePopulationLabel(int populationNumber){
+		statPanel.updatePopulationLabel(populationNumber);
+	}
+	
 	
 	class SimulationThread extends Thread{
 		Simulation sim;
@@ -112,8 +124,6 @@ public class SimulationGUI extends JPanel{
 //      }
 	}
 	
-	
-
 	/**
 	 * @return the simView
 	 */
@@ -126,5 +136,9 @@ public class SimulationGUI extends JPanel{
 	 */
 	public void setSimView(SimulationView simView) {
 		this.simView = simView;
+	}
+
+	public void repaintView() {
+		simView.repaint();
 	}	
 }

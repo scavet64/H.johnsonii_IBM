@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Random;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -20,6 +21,7 @@ import model.Field;
 import model.Location;
 import model.Seagrass;
 import model.SimulationOptions;
+import view.SimulationGUI;
 import view.SimulationView;
 
 /**
@@ -68,7 +70,7 @@ public class Simulation {
 	private int numNodesCreatedToday;				//Counts the number of nodes that were created on the day
 	
 	//Extra utilities required
-	private SimulationView simView;					//simulation view that is needed to repaint the nodes
+	private SimulationGUI simGUI;					//simulation view that is needed to repaint the nodes
 	private SimulationOptions simOptions;			//holds the changeable options for this run of the simulation
 	private final Random rng = new Random();		//Random number generator
 	
@@ -94,8 +96,8 @@ public class Simulation {
 		setPrintStreams();
 	}
 	
-	public void setSimView(SimulationView simView){
-		this.simView = simView;
+	public void setSimGUI(SimulationGUI simGUI){
+		this.simGUI = simGUI;
 	}
 	
 	private void setPrintStreams() {
@@ -160,9 +162,11 @@ public class Simulation {
 //								+ " Dead Population " + perishedPopulation.size() + " Nodes Created Today: " + numNodesCreatedToday);
 			
 			//increment the day
-			System.out.println(dayCounter);
+			//System.out.println(dayCounter);
+			simGUI.repaintView();
+			simGUI.updateDayLabel(dayCounter);
+			simGUI.updatePopulationLabel(population.size());
 			dayCounter++;
-			simView.repaint();
 			Thread.sleep(100);
 			
 			
@@ -227,7 +231,6 @@ public class Simulation {
 		for(int i = 0; i < populationSize; i++){
 			//Get the current node to work with and its location
 			Seagrass node = population.get(i);
-			Location location = node.getLocation();
 			
 			//get the cell the node is located in
 			Cell nodesCell = field.getCellFromLocation(node.getLocation());
@@ -238,56 +241,11 @@ public class Simulation {
 			//check to see if the development progress has reached completion.  >= 1 is complete
 			if(node.getDevelopmentProgress() >= 1 && (node.isApical() || !node.isHasBranched())){
 				
-				
 				//if the population reaches the max, stop the adding process
 				if(populationSize >= MAX_NODES){
 					System.out.println("reached Max Nodes");
 					throw new Exception();
 				} else {
-					
-//					//time to make a new node!
-//					double theta;
-//					
-//					//if the node is apical, continue the path of growth
-//					if(node.isApical()){
-//						theta = node.getAngleOfCreation();
-//					} else {
-//						theta = rng.nextDouble() * 2.0 * Math.PI;
-//					}
-//					
-//					//get the adjacent and opposite lengths for theta using the distance from the mother.
-//					double adj = Math.cos(theta) * node.getDistanceFromMother();		//distance on the X axis
-//					double opp = Math.sin(theta) * node.getDistanceFromMother();		//distance on the Y axis
-//					
-////					if(dayCounter == 15){
-////						//print some information
-////					}
-//					
-//					//add the opp and adj to the mothers location to create the new nodes coordinates 
-//					double newNodeX = location.getxLocation() + adj;
-//					double newNodeY = location.getyLocation() + opp;
-//					
-//					//'bounce' the node away from the edge of the field.
-//					//unsure if this will change or stay in.
-//					if(newNodeX > XLENGTH || newNodeX < 0){
-//						newNodeX = newNodeX + (2 * (-adj));
-//					}
-//					if(newNodeY > YLENGTH || newNodeY < 0){
-//						newNodeY = newNodeY + (2 * (-opp));
-//					}
-//					
-//					Location newLoc = new Location(newNodeX, newNodeY);
-//					newNodesForTheDay.add(new Seagrass(runningIDCounter, dayCounter, newLoc, true, theta, node.getID(), null));
-//					
-//					if(node.isApical()){
-//						node.setApical(false);
-//						node.setChildLocation(newLoc);
-//					} else if(!node.isHasBranched()){
-//						node.setHasBranched(true);
-//						node.setBranchChildLocation(newLoc);
-//					}
-//					node.setDevelopmentProgress(0.0);
-					
 					//this will determine if the node is branching or continuing on its axis
 					//If branching, there is a chance it may not occur
 					if(!node.isApical()){
@@ -311,7 +269,7 @@ public class Simulation {
 				node.setDayDied(dayCounter);
 				perishedNodesForTheDay.add(node);
 			} else {
-				node.incrementAge();
+				//node.incrementAge();
 			}
 		}
 		
@@ -420,15 +378,8 @@ public class Simulation {
 				
 				//print to output file
 				ELEVATIONOUTPUT.println(currentX + "\t" + currentY + "\t" + cell.getElevation());
-				
-				//old style of printing
-//				System.out.println("CellX: " + currentX + "CellY: " + currentY + "Elevation: " + cell.getElevation() +
-//						"WaterDepth: " + cell.getWaterDepth());
-//				ELEVATIONOUTPUT.println("CellX: " + currentX + "CellY: " + currentY + "Elevation: " + cell.getElevation());
 			}
 		}
-		
-		//DrawGrid
 	}
 
 	/**
@@ -484,7 +435,7 @@ public class Simulation {
 	 * 
 	 */
 	private void assignLightAttenuationForDay(int day){
-		
+		//does something to k
 	}
 	
 	/**
@@ -496,7 +447,11 @@ public class Simulation {
 	 * 
 	 */
 	private void calculateDensityForPatches(){
+		HashMap<Cell, Integer> cellToPatchIDMap = new HashMap<Cell, Integer>();
+		for(Seagrass seagrass: population){
 		
+			cellToPatchIDMap.put(field.getCellFromLocation(seagrass.getLocation()), seagrass.getPatchID());
+		}
 	}
 	/**
 	 * Returns an array of patches from the population
