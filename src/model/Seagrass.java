@@ -49,7 +49,7 @@ public class Seagrass {
 	 * @param angleOfCreation the angle of creation relative to its parent's angle
 	 * @param motherID ID of the plants mother
 	 */
-	public Seagrass(int ID, int dayBorn, Location location, boolean isApical, double angleOfCreation, int motherID, GrowthAxis growthAxis) {
+	public Seagrass(int ID, int dayBorn, Location location, boolean isApical, double angleOfCreation, int motherID, GrowthAxis growthAxis, int patchID) {
 		super();
 		this.ID = ID;
 		this.dayBorn = dayBorn;
@@ -72,7 +72,9 @@ public class Seagrass {
 		developmentProgress = developmentProgress + (1/daysToNode);
 		
 		double mmAdded = distance(lightValueForDay);
-		distanceForNewNode = distanceForNewNode + (mmAdded/1000.0);
+//		distanceForNewNode = distanceForNewNode + (mmAdded/1000.0); /* IF CELL IS A METER^2 */
+//		distanceForNewNode = distanceForNewNode + (mmAdded/10.0); /* IF CELL IS A CENTIMETER^2 */
+		distanceForNewNode = distanceForNewNode + (mmAdded/100.0); /* IF CELL IS A DECIMETER^2 */
 		age++;
 	}
 	
@@ -111,7 +113,7 @@ public class Seagrass {
 		}
 		
 		//create the seagrass object
-		child = new Seagrass(runningIDCounter, dayCounter, newLoc, true, theta, ID, childGrowthAxis);
+		child = new Seagrass(runningIDCounter, dayCounter, newLoc, true, theta, ID, childGrowthAxis, patchID);
 		
 		//Modifies the current status of the seagrass and assigns the child's location for GUI use.
 		if(isApical){
@@ -124,6 +126,7 @@ public class Seagrass {
 		
 		//sets the development progress back to 0 to start the process over again
 		developmentProgress = 0.0;
+		distanceForNewNode = 0.0;
 
 		return child;
 	}

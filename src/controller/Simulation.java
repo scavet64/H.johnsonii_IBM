@@ -13,6 +13,8 @@ import java.io.PrintStream;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Queue;
 import java.util.Random;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -45,8 +47,11 @@ public class Simulation {
 	private final int numberOfRecuits;				//number of starting nodes
 	
 	//Attributes that are hard coded
-	private final double SEAFLOOR_SLOPE = 0.01;		//The slope of the seafloor from the shore
-	private double LIGHT_ATTENUATION = 0.2;			//light attenuation coefficient due to everything but shading by other seagrasses
+	//private final double SEAFLOOR_SLOPE = 0.01;		//The slope of the seafloor from the shore **IF CELL IS A METER^2**
+	//private final double SEAFLOOR_SLOPE = 0.0001;		//The slope of the seafloor from the shore **IF CELL IS CENTIMETER^2**
+	private final double SEAFLOOR_SLOPE = 0.001;		//The slope of the seafloor from the shore **IF CELL IS DECIMETER^2**
+	private final double CELL_AREA = 1;					//The area of each cell (1^2 decimeter)
+	private double LIGHT_ATTENUATION = 0.02;			//light attenuation coefficient due to everything but shading by other seagrasses
 	
 	//file writers
 	private PrintStream LIGHTOUTPUT;
@@ -55,6 +60,7 @@ public class Simulation {
 	private PrintStream BIOMASSOUTPUT;
 	private PrintStream DEPTHOUTPUT;
 	private PrintStream DAILYOUTPUT;
+	private PrintStream STATISTICSOUTPUT;
 	
 	//Data structures
 	private ArrayList<Seagrass> population;			//population of seagrass
@@ -90,7 +96,7 @@ public class Simulation {
 		
 		//setup field and population arrays
 		field = new Field(XLENGTH,YLENGTH);
-		population = new ArrayList<Seagrass>();
+		population = new ArrayList<Seagrass>(MAX_NODES);
 		perishedPopulation = new ArrayList<Seagrass>();
 	
 		setPrintStreams();
@@ -108,6 +114,7 @@ public class Simulation {
 			BIOMASSOUTPUT = new PrintStream(new File("biomass.txt"));
 			DEPTHOUTPUT = new PrintStream(new File("Depth.txt"));
 			DAILYOUTPUT = new PrintStream(new File("Daily.txt"));
+			STATISTICSOUTPUT = new PrintStream(new File("Statistics.txt"));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -173,7 +180,7 @@ public class Simulation {
 		}
 		
 		//calculate density and report for each recruit
-		
+		printDensityForEachPatch();
 		System.out.println("All Done");
 		
 	}
@@ -187,6 +194,7 @@ public class Simulation {
 		BIOMASSOUTPUT.println(printString + "\tBioMass");
 		LIGHTOUTPUT.println(printString + "\tLightLevel");
 		DEPTHOUTPUT.println(printString + "\tWaterDepth");
+		STATISTICSOUTPUT.println("PatchID\tMean\tStdev");
 		
 	}
 
@@ -204,13 +212,14 @@ public class Simulation {
 			Location randLoc = new Location(randomX, randomY);
 	
 										//ID, age, Location, isApical, angle, MotherID)
-			population.add(new Seagrass(runningIDCounter, 1, randLoc, true, 0.0, runningIDCounter, Seagrass.PRIMARYAXIS));
+			population.add(new Seagrass(runningIDCounter, 1, randLoc, true, 0.0, runningIDCounter, Seagrass.PRIMARYAXIS, runningIDCounter));
 			runningIDCounter++;
 		}
 		
 		//for testing zoom
-		Location loc = new Location(1, 1);
-		population.add(new Seagrass(runningIDCounter, 1, loc, true, 0.0, runningIDCounter, Seagrass.PRIMARYAXIS));
+		Location loc = new Location(5, 5);
+		population.add(new Seagrass(runningIDCounter, 1, loc, true, 0.0, runningIDCounter, Seagrass.PRIMARYAXIS, runningIDCounter));
+		runningIDCounter++;
 		
 	}
 
@@ -250,14 +259,23 @@ public class Simulation {
 					//If branching, there is a chance it may not occur
 					if(!node.isApical()){
 						if(rng.nextInt(100) < 25){
-							newNodesForTheDay.add(node.createChild(XLENGTH, YLENGTH, runningIDCounter, dayCounter));
+							//newNodesForTheDay.add(node.createChild(XLENGTH, YLENGTH, runningIDCounter, dayCounter));
+							
+							Seagrass newNode = node.createChild(XLENGTH, YLENGTH, runningIDCounter, dayCounter);
+							newNodesForTheDay.add(newNode);
+							field.getCellFromLocation(node.getLocation()).addSeagrass();
 							runningIDCounter++;
 							numNodesCreatedToday++;
 						} else {
 							node.setDevelopmentProgress(0);
+							node.setDistanceFromMother(0);
 						}
 					} else {
-						newNodesForTheDay.add(node.createChild(XLENGTH, YLENGTH, runningIDCounter, dayCounter));
+						//newNodesForTheDay.add(node.createChild(XLENGTH, YLENGTH, runningIDCounter, dayCounter));
+						
+						Seagrass newNode = node.createChild(XLENGTH, YLENGTH, runningIDCounter, dayCounter);
+						newNodesForTheDay.add(newNode);
+						field.getCellFromLocation(node.getLocation()).addSeagrass();
 						runningIDCounter++;
 						numNodesCreatedToday++;
 					}
@@ -267,6 +285,7 @@ public class Simulation {
 			//if the node is older than 50 days old, the node dies of old age
 			if(node.getAge() > 50){
 				node.setDayDied(dayCounter);
+				field.getCellFromLocation(node.getLocation()).removeSeagrass();
 				perishedNodesForTheDay.add(node);
 			} else {
 				//node.incrementAge();
@@ -439,6 +458,43 @@ public class Simulation {
 	}
 	
 	/**
+	 * 
+	 */
+	private void printDensityForEachPatch(){
+		HashMap<Integer, Queue<Seagrass>> patchIDtoPatchCollectionMap = getPatchesFromPopulation();
+		
+		for(Integer patchID: patchIDtoPatchCollectionMap.keySet()){
+			
+			//get the mean and stdev density
+			double[] mean_Stdev_Density = getMeanAndStdevForPatch(patchIDtoPatchCollectionMap.get(patchID));
+			
+			double[] mean_stdev_CellLight = getMeanAndStdevForLightGivenPatch(patchIDtoPatchCollectionMap.get(patchID));
+			
+			//printing all the data for this patch
+			String printingString = patchID + "\t" + mean_Stdev_Density[0] + "\t" + mean_Stdev_Density[1];
+			STATISTICSOUTPUT.println(printingString);
+		}
+	}
+	
+	private double[] getMeanAndStdevForLightGivenPatch(Queue<Seagrass> patch) {
+		double[] mean_Stdev_Array = new double[2];
+		
+		HashSet<Cell> patchCells = getCellsFromPatch(patch);
+		double[] cellLightArray = new double[patchCells.size()];
+		
+		
+		return mean_Stdev_Array;
+	}
+
+	private HashSet<Cell> getCellsFromPatch(Queue<Seagrass> patch){
+		HashSet<Cell> patchCells = new HashSet<Cell>();
+		for(Seagrass seagrass: patch){
+			patchCells.add(field.getCellFromLocation(seagrass.getLocation()));
+		}
+		return patchCells;
+	}
+	
+	/**
 	 * Calculates the density for a given patch
 	 * TODO iterate through patch and find the cells it resides in (2D-Array of cells??) (Maybe a X -> Y -> Cell map??)
 	 * 		Calculate the density for each cell
@@ -446,28 +502,75 @@ public class Simulation {
 	 * 		Take average of each density and standard Deviation
 	 * 
 	 */
-	private void calculateDensityForPatches(){
-		HashMap<Cell, Integer> cellToPatchIDMap = new HashMap<Cell, Integer>();
-		for(Seagrass seagrass: population){
+	private double[] getMeanAndStdevForPatch(Queue<Seagrass> patch){
 		
-			cellToPatchIDMap.put(field.getCellFromLocation(seagrass.getLocation()), seagrass.getPatchID());
+		double[] mean_Stdev_Array = new double[2];
+		
+		//first get the cells corresponding to the patch
+		HashSet<Cell> patchCells = getCellsFromPatch(patch);
+		
+		//then iterate over collection of cells and calculate density in each cell
+		double[] patchDensities = new double[patchCells.size()];
+		double sum = 0.0;
+		int index = 0;
+		System.out.println("SIMULATION: CellArea = " + CELL_AREA);
+		for(Cell cell: patchCells){
+			//density = number of nodes / area of cell
+			double density = cell.getNumberOfNodes() / CELL_AREA;
+			//System.out.println("SIMULATION: density = " + density);
+			//System.out.println("SIMULATION: Number of Nodes = " + cell.getNumberOfNodes());
+			System.out.println(density);
+			
+			//print the density?
+			
+			//add cell density to the total sum
+			sum += density;
+			//System.out.println("SIMULATION: sum = " + sum);
+			
+			//add density to collection to be processed later
+			patchDensities[index] = density;
+			index++;
 		}
-	}
-	/**
-	 * Returns an array of patches from the population
-	 * TODO How?
-	 * 		Run though each cell
-	 */
-	private void getPatchesFromPopulation(){
+		double mean = sum/patchCells.size();
 		
+		//calculate stdev
+		double runningNumeratorSum = 0;
+		double difference = 0;
+		for(int i = 0; i < patchDensities.length; i++){
+			difference = patchDensities[i] - mean;
+			runningNumeratorSum += (difference*difference);
+		}
+		double stdev = Math.sqrt(runningNumeratorSum/patchDensities.length);
+		
+		//add mean and stdev to the return array
+		mean_Stdev_Array[0] = mean;
+		mean_Stdev_Array[1] = stdev;
+		
+		return mean_Stdev_Array;
 	}
 	
 	/**
-	 * Alternative to finding patches using iteration though field rather than population
-	 * 
+	 * Returns an array of patches from the population
+	 * TODO How?
+	 * 		Run though population
+	 * 			put every seagrass into map with patchID as key and queue as the value
+	 * 				add the seagrass to the queue
 	 */
-	private void getPatchesFromCells(){
+	private HashMap<Integer, Queue<Seagrass>> getPatchesFromPopulation(){
+		HashMap<Integer, Queue<Seagrass>> patchIDtoPatchCollectionMap = new HashMap<Integer, Queue<Seagrass>>();
 		
+		for(Seagrass seagrass: population){
+			Integer patchID = seagrass.getPatchID();
+			if(patchIDtoPatchCollectionMap.containsKey(patchID)){
+				patchIDtoPatchCollectionMap.get(patchID).add(seagrass);
+			} else {
+				LinkedBlockingQueue<Seagrass> patch = new LinkedBlockingQueue<Seagrass>();
+				patch.add(seagrass);
+				patchIDtoPatchCollectionMap.put(patchID, patch);
+			}
+		}
+		
+		return patchIDtoPatchCollectionMap;
 	}
 	
 	/***********************Setters and getters***********************/

@@ -84,7 +84,6 @@ public class SimulationView extends JPanel {
 				} else if(e.isShiftDown()){
 					//zoom = 1;
 				}
-				System.out.println("entered");
 				updateUI();
 			}
 			
@@ -139,6 +138,8 @@ public class SimulationView extends JPanel {
 					public void actionPerformed(ActionEvent e) {
 						zoom += zoom/2;
 						zooming = true;
+						translationX *= zoom;
+						translationY *= zoom;
 						repaint();
 					}
 				};
@@ -149,6 +150,8 @@ public class SimulationView extends JPanel {
 					public void actionPerformed(ActionEvent e) {
 						zoom -= zoom/2;
 						zooming = true;
+						translationX *= zoom;
+						translationY *= zoom;
 						repaint();
 					}
 				};
@@ -195,16 +198,19 @@ public class SimulationView extends JPanel {
         if(zooming){
         	graphics.translate((this.getWidth()/2) + translationX, this.getHeight()/2 + translationY);
         	//graphics.translate((this.getWidth()/2), this.getHeight()/2);
+        	//graphics.translate(translationX,translationY);
         	graphics.scale(zoom, zoom);
         	//graphics.translate(-(this.getWidth()/2), -(this.getHeight()/2));
         	graphics.translate(-(this.getWidth()/2) + translationX, -(this.getHeight()/2 + translationY));
+        	//graphics.translate(translationX,translationY);
         	//translationX = (int) ((translationX + this.getWidth()/2) - (translationX*zoom)/2);
         	//translationY = (int) ((translationY + this.getHeight()/2) - ((translationX*zoom)/2));
         	//graphics.translate(translationX, translationY);
         	//graphics.translate(((translationX + this.getWidth()/2) - (translationX*zoom)/2), (translationY + this.getHeight()/2) - ((translationX*zoom)/2));
         	//graphics.translate(((this.getWidth()/2) - (translationX*zoom)/2), (this.getHeight()/2) - ((translationX*zoom)/2));
-        	zooming = false;
-        } else {
+        	//graphics.translate(-translationX, -translationY);
+        	zooming = false;      
+       } else {
         	//graphics.scale(zoom, zoom);
         	//graphics.translate(translationX *zoom, translationY *zoom);
         	graphics.translate(translationX, translationY);
