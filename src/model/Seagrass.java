@@ -65,6 +65,7 @@ public class Seagrass {
 		this.age = 0;
 		//this.parentalConnection = null;
 		this.growthAxis = growthAxis;
+		this.patchID = patchID;
 	}
 	
 	public void growth(double lightValueForDay){

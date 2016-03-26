@@ -21,6 +21,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import model.Cell;
 import model.Field;
 import model.Location;
+import model.Patch;
 import model.Seagrass;
 import model.SimulationOptions;
 import view.SimulationGUI;
@@ -50,7 +51,7 @@ public class Simulation {
 	//private final double SEAFLOOR_SLOPE = 0.01;		//The slope of the seafloor from the shore **IF CELL IS A METER^2**
 	//private final double SEAFLOOR_SLOPE = 0.0001;		//The slope of the seafloor from the shore **IF CELL IS CENTIMETER^2**
 	private final double SEAFLOOR_SLOPE = 0.001;		//The slope of the seafloor from the shore **IF CELL IS DECIMETER^2**
-	private final double CELL_AREA = 1;					//The area of each cell (1^2 decimeter)
+	public static final double CELL_AREA = 1;			//The area of each cell (1^2 decimeter)
 	private double LIGHT_ATTENUATION = 0.02;			//light attenuation coefficient due to everything but shading by other seagrasses
 	
 	//file writers
@@ -174,7 +175,7 @@ public class Simulation {
 			simGUI.updateDayLabel(dayCounter);
 			simGUI.updatePopulationLabel(population.size());
 			dayCounter++;
-			Thread.sleep(100);
+			//Thread.sleep(100);
 			
 			
 		}
@@ -194,7 +195,7 @@ public class Simulation {
 		BIOMASSOUTPUT.println(printString + "\tBioMass");
 		LIGHTOUTPUT.println(printString + "\tLightLevel");
 		DEPTHOUTPUT.println(printString + "\tWaterDepth");
-		STATISTICSOUTPUT.println("PatchID\tMean\tStdev");
+		STATISTICSOUTPUT.println("PatchID\tPop\tDensity Mean\t\tDensity Stdev\t\tLight Mean\t\tLight Stdev\t\tDepth mean\t\tDepth Stdev");
 		
 	}
 
@@ -461,92 +462,16 @@ public class Simulation {
 	 * 
 	 */
 	private void printDensityForEachPatch(){
-		HashMap<Integer, Queue<Seagrass>> patchIDtoPatchCollectionMap = getPatchesFromPopulation();
-		
+		HashMap<Integer, Patch> patchIDtoPatchCollectionMap = getPatchesFromPopulation();
+		System.out.println(patchIDtoPatchCollectionMap);
 		for(Integer patchID: patchIDtoPatchCollectionMap.keySet()){
+			//calculate the data for each patch
+			Patch currentPatch = patchIDtoPatchCollectionMap.get(patchID);
+			currentPatch.calculateMeansAndStdevsForPatch(field);
 			
-			//get the mean and stdev density
-			double[] mean_Stdev_Density = getMeanAndStdevForPatch(patchIDtoPatchCollectionMap.get(patchID));
-			
-			double[] mean_stdev_CellLight = getMeanAndStdevForLightGivenPatch(patchIDtoPatchCollectionMap.get(patchID));
-			
-			//printing all the data for this patch
-			String printingString = patchID + "\t" + mean_Stdev_Density[0] + "\t" + mean_Stdev_Density[1];
-			STATISTICSOUTPUT.println(printingString);
+			//Print information about the patch
+			STATISTICSOUTPUT.println(currentPatch);
 		}
-	}
-	
-	private double[] getMeanAndStdevForLightGivenPatch(Queue<Seagrass> patch) {
-		double[] mean_Stdev_Array = new double[2];
-		
-		HashSet<Cell> patchCells = getCellsFromPatch(patch);
-		double[] cellLightArray = new double[patchCells.size()];
-		
-		
-		return mean_Stdev_Array;
-	}
-
-	private HashSet<Cell> getCellsFromPatch(Queue<Seagrass> patch){
-		HashSet<Cell> patchCells = new HashSet<Cell>();
-		for(Seagrass seagrass: patch){
-			patchCells.add(field.getCellFromLocation(seagrass.getLocation()));
-		}
-		return patchCells;
-	}
-	
-	/**
-	 * Calculates the density for a given patch
-	 * TODO iterate through patch and find the cells it resides in (2D-Array of cells??) (Maybe a X -> Y -> Cell map??)
-	 * 		Calculate the density for each cell
-	 * 			For every node in the patch, 
-	 * 		Take average of each density and standard Deviation
-	 * 
-	 */
-	private double[] getMeanAndStdevForPatch(Queue<Seagrass> patch){
-		
-		double[] mean_Stdev_Array = new double[2];
-		
-		//first get the cells corresponding to the patch
-		HashSet<Cell> patchCells = getCellsFromPatch(patch);
-		
-		//then iterate over collection of cells and calculate density in each cell
-		double[] patchDensities = new double[patchCells.size()];
-		double sum = 0.0;
-		int index = 0;
-		System.out.println("SIMULATION: CellArea = " + CELL_AREA);
-		for(Cell cell: patchCells){
-			//density = number of nodes / area of cell
-			double density = cell.getNumberOfNodes() / CELL_AREA;
-			//System.out.println("SIMULATION: density = " + density);
-			//System.out.println("SIMULATION: Number of Nodes = " + cell.getNumberOfNodes());
-			System.out.println(density);
-			
-			//print the density?
-			
-			//add cell density to the total sum
-			sum += density;
-			//System.out.println("SIMULATION: sum = " + sum);
-			
-			//add density to collection to be processed later
-			patchDensities[index] = density;
-			index++;
-		}
-		double mean = sum/patchCells.size();
-		
-		//calculate stdev
-		double runningNumeratorSum = 0;
-		double difference = 0;
-		for(int i = 0; i < patchDensities.length; i++){
-			difference = patchDensities[i] - mean;
-			runningNumeratorSum += (difference*difference);
-		}
-		double stdev = Math.sqrt(runningNumeratorSum/patchDensities.length);
-		
-		//add mean and stdev to the return array
-		mean_Stdev_Array[0] = mean;
-		mean_Stdev_Array[1] = stdev;
-		
-		return mean_Stdev_Array;
 	}
 	
 	/**
@@ -556,15 +481,15 @@ public class Simulation {
 	 * 			put every seagrass into map with patchID as key and queue as the value
 	 * 				add the seagrass to the queue
 	 */
-	private HashMap<Integer, Queue<Seagrass>> getPatchesFromPopulation(){
-		HashMap<Integer, Queue<Seagrass>> patchIDtoPatchCollectionMap = new HashMap<Integer, Queue<Seagrass>>();
+	private HashMap<Integer, Patch> getPatchesFromPopulation(){
+		HashMap<Integer, Patch> patchIDtoPatchCollectionMap = new HashMap<Integer, Patch>();
 		
 		for(Seagrass seagrass: population){
 			Integer patchID = seagrass.getPatchID();
 			if(patchIDtoPatchCollectionMap.containsKey(patchID)){
 				patchIDtoPatchCollectionMap.get(patchID).add(seagrass);
 			} else {
-				LinkedBlockingQueue<Seagrass> patch = new LinkedBlockingQueue<Seagrass>();
+				Patch patch = new Patch(patchID);
 				patch.add(seagrass);
 				patchIDtoPatchCollectionMap.put(patchID, patch);
 			}

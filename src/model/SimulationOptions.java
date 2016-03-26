@@ -3,13 +3,18 @@ package model;
 public class SimulationOptions {
 	
 	//Default Options
-	private int xLength = 10;				//Distance along the shoreline 	(was NROW)
-	private int yLength = 10;				//Distance from the shoreline	(was NCOL)
+	private int xLength = 1500;				//Distance along the shoreline 	(was NROW)
+	private int yLength = 500;				//Distance from the shoreline	(was NCOL)
 	private int numberDays = 200;			//number of days to run the simulation
 	private int numberYears = 0;			//number of years to run the simulation
-	private int numRecruits = 0;			//number of starting nodes
+	private int numRecruits = 5;			//number of starting nodes
 	private int maxNodes = 500000;			//Maximum number of nodes for the simulation
 	private static SimulationOptions singleInstance;
+	
+	//testing Options
+//	private int numRecruits = 0;			//number of starting nodes
+//	private int xLength = 10;				//Distance along the shoreline 	(was NROW)
+//	private int yLength = 10;				//Distance from the shoreline	(was NCOL)
 
 	/**
 	 * TODO: Think about using a shutdown hook to save the settings when finished so it would be possible to load on initialization
