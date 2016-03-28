@@ -8,7 +8,7 @@ public class SimulationOptions {
 	private int numberDays = 200;			//number of days to run the simulation
 	private int numberYears = 0;			//number of years to run the simulation
 	private int numRecruits = 5;			//number of starting nodes
-	private int maxNodes = 500000;			//Maximum number of nodes for the simulation
+	private int maxNodes = 9000000;			//Maximum number of nodes for the simulation
 	private static SimulationOptions singleInstance;
 	
 	//testing Options

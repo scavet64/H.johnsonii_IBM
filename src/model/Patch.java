@@ -67,7 +67,7 @@ public class Patch {
 		double depthSum = 0.0;
 		
 		int index = 0;
-		System.out.println("PATCH: CellArea = " + Simulation.CELL_AREA);
+		//System.out.println("PATCH: CellArea = " + Simulation.CELL_AREA);
 		for(Cell cell: patchCells){
 			//density = number of nodes / area of cell
 			double density = cell.getNumberOfNodes() / Simulation.CELL_AREA;

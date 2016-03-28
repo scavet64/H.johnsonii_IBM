@@ -38,7 +38,8 @@ public class Cell {
 	 * This method must only be called after elevation and waterLevel have been set.
 	 */
 	public void generateWaterDepth() {
-		this.waterDepth = this.elevation - this.waterLevel;
+		this.waterDepth = -(this.elevation - this.waterLevel);
+		
 	}
 	
 	public void addSeagrass() {

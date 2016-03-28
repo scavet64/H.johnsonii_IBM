@@ -166,6 +166,7 @@ public class Seagrass {
 //		  develop=y
 //		  RETURN
 //		END
+		availableLight *= 100; //TODO Is this right?
 		double y = 8.151507772603294 + 6.849203199969538 * Math.exp((-availableLight)/14.26707601933104);
 		return y;
 	

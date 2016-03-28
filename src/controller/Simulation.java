@@ -50,9 +50,9 @@ public class Simulation {
 	//Attributes that are hard coded
 	//private final double SEAFLOOR_SLOPE = 0.01;		//The slope of the seafloor from the shore **IF CELL IS A METER^2**
 	//private final double SEAFLOOR_SLOPE = 0.0001;		//The slope of the seafloor from the shore **IF CELL IS CENTIMETER^2**
-	private final double SEAFLOOR_SLOPE = 0.001;		//The slope of the seafloor from the shore **IF CELL IS DECIMETER^2**
+	private final double SEAFLOOR_SLOPE = 0.01;		//The slope of the seafloor from the shore **IF CELL IS DECIMETER^2**
 	public static final double CELL_AREA = 1;			//The area of each cell (1^2 decimeter)
-	private double LIGHT_ATTENUATION = 0.02;			//light attenuation coefficient due to everything but shading by other seagrasses
+	private double LIGHT_ATTENUATION = 1.2;			//light attenuation coefficient due to everything but shading by other seagrasses
 	
 	//file writers
 	private PrintStream LIGHTOUTPUT;
@@ -158,7 +158,7 @@ public class Simulation {
 			
 			//print current population every month
 			if(dayCounter % 30 == 0){
-				dailyOut();
+				//dailyOut();
 			}
 			
 			//prints the current year, day, population size, perished population size, and number of nodes created today.
@@ -218,9 +218,9 @@ public class Simulation {
 		}
 		
 		//for testing zoom
-		Location loc = new Location(5, 5);
-		population.add(new Seagrass(runningIDCounter, 1, loc, true, 0.0, runningIDCounter, Seagrass.PRIMARYAXIS, runningIDCounter));
-		runningIDCounter++;
+//		Location loc = new Location(5, 5);
+//		population.add(new Seagrass(runningIDCounter, 1, loc, true, 0.0, runningIDCounter, Seagrass.PRIMARYAXIS, runningIDCounter));
+//		runningIDCounter++;
 		
 	}
 
@@ -259,7 +259,7 @@ public class Simulation {
 					//this will determine if the node is branching or continuing on its axis
 					//If branching, there is a chance it may not occur
 					if(!node.isApical()){
-						if(rng.nextInt(100) < 25){
+						//if(rng.nextInt(100) < 25){
 							//newNodesForTheDay.add(node.createChild(XLENGTH, YLENGTH, runningIDCounter, dayCounter));
 							
 							Seagrass newNode = node.createChild(XLENGTH, YLENGTH, runningIDCounter, dayCounter);
@@ -267,10 +267,10 @@ public class Simulation {
 							field.getCellFromLocation(node.getLocation()).addSeagrass();
 							runningIDCounter++;
 							numNodesCreatedToday++;
-						} else {
-							node.setDevelopmentProgress(0);
-							node.setDistanceFromMother(0);
-						}
+//						} else {
+//							node.setDevelopmentProgress(0);
+//							node.setDistanceFromMother(0);
+//						}
 					} else {
 						//newNodesForTheDay.add(node.createChild(XLENGTH, YLENGTH, runningIDCounter, dayCounter));
 						
@@ -320,25 +320,31 @@ public class Simulation {
 			NODEOUTPUT.println(yearCounter + "\t" + dayCounter + "\t" + population.get(i).toString());
 		}
 		
-		//run through the cells
-		for(int currentY = 0; currentY < YLENGTH; currentY++){
+		//run through every 10 cells
+		for(int currentY = 0; currentY < YLENGTH; currentY += 10){
 			
-			for(int currentX = 0; currentX < XLENGTH; currentX++){
+			for(int currentX = 0; currentX < XLENGTH; currentX += 10){
 				Cell currentCell = field.getCellFromCords(currentX, currentY);
 				String printString = dayCounter + "\t\t" + currentX + "\t\t" + currentY;
 				
 				BIOMASSOUTPUT.println(printString + "\t\t" + currentCell.getBioMass());
 				LIGHTOUTPUT.println(printString + "\t\t" + currentCell.getSeaFloorlight());
 				DEPTHOUTPUT.println(printString + "\t\t" + currentCell.getWaterDepth());
-				
-				//Old printing Style
-//				String printString = "CurrentDay: " + dayCounter + " Xlocation: " + currentX + " YLocation: " + currentY;
-//				
-//					BIOMASSOUTPUT.println(printString + " BioMass: " + currentCell.getBioMass());
-//					LIGHTOUTPUT.println(printString + " LightLevel: " + currentCell.getSeaFloorlight());
-//					DEPTHOUTPUT.println(printString + " WaterDepth: " + currentCell.getWaterDepth());
 			}
 		}
+		
+		//run through ALL the cells
+//		for(int currentY = 0; currentY < YLENGTH; currentY++){
+//			
+//			for(int currentX = 0; currentX < XLENGTH; currentX++){
+//				Cell currentCell = field.getCellFromCords(currentX, currentY);
+//				String printString = dayCounter + "\t\t" + currentX + "\t\t" + currentY;
+//				
+//				BIOMASSOUTPUT.println(printString + "\t\t" + currentCell.getBioMass());
+//				LIGHTOUTPUT.println(printString + "\t\t" + currentCell.getSeaFloorlight());
+//				DEPTHOUTPUT.println(printString + "\t\t" + currentCell.getWaterDepth());
+//			}
+//		}
 		
 	}
 
@@ -389,7 +395,7 @@ public class Simulation {
 				Cell cell = new Cell();
 				
 				//assigns environmental factors
-				cell.setElevation((currentY+1)*SEAFLOOR_SLOPE);
+				cell.setElevation( -((currentY+1)*SEAFLOOR_SLOPE));
 				cell.setWaterLevel(generateWaterLevel());
 				cell.generateWaterDepth();
 				
@@ -409,7 +415,7 @@ public class Simulation {
 	 * @return the waterlevel for the current day
 	 */
 	private double generateWaterLevel() {
-		return 0.5;
+		return 0; //0 = average
 	}
 	
 	/**
