@@ -69,7 +69,9 @@ public class Seagrass {
 	}
 	
 	public void growth(double lightValueForDay){
-		double daysToNode = develop(lightValueForDay);
+		//double daysToNode = develop(lightValueForDay);
+		
+		double daysToNode = growthAxis.getDaysAdded(lightValueForDay * 100);
 		developmentProgress = developmentProgress + (1/daysToNode);
 		
 		double mmAdded = distance(lightValueForDay);
@@ -142,35 +144,35 @@ public class Seagrass {
 //		age++;
 //	}
 	
-	private double develop(double availableLight){
-//		  This function relates development time towards producing a
-//		      new node to the light level in a cell
-//		
-//		 TableCurve D:\seagrass\days.f90 Dec 18, 2007 3:52:04 PM 
-//		  
-//		 X=  
-//		 Y=  
-//		 Eqn# 8002  Exponential(a,b,c) 
-//		 r2=0.999851595076407D0 
-//		 r2adj=0.999554785229221D0 
-//		 StdErr=0.0693848378347615D0 
-//		 Fval=3368.660455695716D0 
-//		 a= 8.151507772603294D0 
-//		 b= 6.849203199969538D0 
-//		 c= 14.26707601933104D0 
-//		 Constraint: c<>0 
-//		-----------------------------------------------------------
-//		  REAL*8 x,y
-//		  y=8.151507772603294D0+6.849203199969538D0*DEXP(-x/&
-//		   &14.26707601933104D0) 
-//		  develop=y
-//		  RETURN
-//		END
-		availableLight *= 100; //TODO Is this right?
-		double y = 8.151507772603294 + 6.849203199969538 * Math.exp((-availableLight)/14.26707601933104);
-		return y;
-	
-	}
+//	private double develop(double availableLight){
+////		  This function relates development time towards producing a
+////		      new node to the light level in a cell
+////		
+////		 TableCurve D:\seagrass\days.f90 Dec 18, 2007 3:52:04 PM 
+////		  
+////		 X=  
+////		 Y=  
+////		 Eqn# 8002  Exponential(a,b,c) 
+////		 r2=0.999851595076407D0 
+////		 r2adj=0.999554785229221D0 
+////		 StdErr=0.0693848378347615D0 
+////		 Fval=3368.660455695716D0 
+////		 a= 8.151507772603294D0 
+////		 b= 6.849203199969538D0 
+////		 c= 14.26707601933104D0 
+////		 Constraint: c<>0 
+////		-----------------------------------------------------------
+////		  REAL*8 x,y
+////		  y=8.151507772603294D0+6.849203199969538D0*DEXP(-x/&
+////		   &14.26707601933104D0) 
+////		  develop=y
+////		  RETURN
+////		END
+//		availableLight *= 100; //TODO Is this right?
+//		double y = 8.151507772603294 + 6.849203199969538 * Math.exp((-availableLight)/14.26707601933104);
+//		return y;
+//	
+//	}
 
 
 	private double distance(double availableLight){

@@ -67,10 +67,15 @@ public class Patch {
 		double depthSum = 0.0;
 		
 		int index = 0;
+		
+		//System.out.print("PATCH: Density Array =");
 		//System.out.println("PATCH: CellArea = " + Simulation.CELL_AREA);
 		for(Cell cell: patchCells){
 			//density = number of nodes / area of cell
 			double density = cell.getNumberOfNodes() / Simulation.CELL_AREA;
+			
+			//System.out.print(density + " " + "(" + cell.getNumberOfNodes() + ") ,");
+			
 			double light = cell.getSeaFloorlight();
 			double depth = cell.getWaterDepth();
 			
@@ -86,6 +91,9 @@ public class Patch {
 			
 			index++;
 		}
+		//System.out.println();
+		
+		
 		
 		//assign each mean
 		densityMean = densitySum/numberOfCellsForPatch;

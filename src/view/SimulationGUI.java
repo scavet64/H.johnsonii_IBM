@@ -8,6 +8,7 @@ import javax.swing.JButton;
 import javax.swing.JPanel;
 
 import controller.Simulation;
+import model.SimulationOptions;
 
 public class SimulationGUI extends JPanel{
 
@@ -108,6 +109,10 @@ public class SimulationGUI extends JPanel{
 		public void run(){
 			try {
 				sim.runSimulation();
+				new Simulation(SimulationOptions.getInstance()).runSimulation();
+				new Simulation(SimulationOptions.getInstance()).runSimulation();
+				new Simulation(SimulationOptions.getInstance()).runSimulation();
+				new Simulation(SimulationOptions.getInstance()).runSimulation();
 				//pause();
 			} catch (Exception e) {
 				// TODO Auto-generated catch block

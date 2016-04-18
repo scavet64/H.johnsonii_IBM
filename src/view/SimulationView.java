@@ -60,7 +60,7 @@ public class SimulationView extends JPanel {
 		
 		xLength = (int) simDimension.getWidth() * startingScale;
 		yLength = (int) simDimension.getHeight() * startingScale ;
-		this.setBackground(Color.white);
+		this.setBackground(Color.black);
 		updateUI();
 		
 		this.addMouseWheelListener(new MouseWheelListener(){
@@ -220,7 +220,7 @@ public class SimulationView extends JPanel {
         	
         }
         //graphics.scale(zoom, zoom);
-        graphics.setColor(Color.black);
+        graphics.setColor(Color.white);
         
         
         for(int x = OFFSET; x <= xLength+OFFSET; x=x+startingScale){

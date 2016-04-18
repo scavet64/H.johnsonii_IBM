@@ -3,9 +3,9 @@ package model;
 public class SimulationOptions {
 	
 	//Default Options
-	private int xLength = 1500;				//Distance along the shoreline 	(was NROW)
+	private int xLength = 25;				//Distance along the shoreline 	(was NROW)
 	private int yLength = 500;				//Distance from the shoreline	(was NCOL)
-	private int numberDays = 200;			//number of days to run the simulation
+	private int numberDays = 365;			//number of days to run the simulation
 	private int numberYears = 0;			//number of years to run the simulation
 	private int numRecruits = 5;			//number of starting nodes
 	private int maxNodes = 9000000;			//Maximum number of nodes for the simulation
