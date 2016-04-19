@@ -10,6 +10,8 @@ public class SimulationOptions {
 	private int numRecruits = 5;			//number of starting nodes
 	private int maxNodes = 9000000;			//Maximum number of nodes for the simulation
 	private static SimulationOptions singleInstance;
+	private int lowerQuartile = SolarBehavior.ZERO;
+	private int frequencyOfStorms = 0;
 	
 	//testing Options
 //	private int numRecruits = 0;			//number of starting nodes
@@ -144,6 +146,34 @@ public class SimulationOptions {
 
 	public int getMaxNodes() {
 		return maxNodes;
+	}
+
+	/**
+	 * @return the lowerQuartile
+	 */
+	public int getLowerQuartile() {
+		return lowerQuartile;
+	}
+
+	/**
+	 * @param lowerQuartile the lowerQuartile to set
+	 */
+	public void setLowerQuartile(int lowerQuartile) {
+		this.lowerQuartile = lowerQuartile;
+	}
+
+	/**
+	 * @return the frequencyOfStorms
+	 */
+	public int getFrequencyOfStorms() {
+		return frequencyOfStorms;
+	}
+
+	/**
+	 * @param frequencyOfStorms the frequencyOfStorms to set
+	 */
+	public void setFrequencyOfStorms(int frequencyOfStorms) {
+		this.frequencyOfStorms = frequencyOfStorms;
 	}
 
 	

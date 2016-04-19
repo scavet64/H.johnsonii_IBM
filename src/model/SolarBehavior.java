@@ -76,10 +76,12 @@ public class SolarBehavior {
 	 */
 	private int getLowerQuantileForDay(int day) {
 		int lowerQuantile;
+		SimulationOptions simOpt = SimulationOptions.getInstance();
+		int stormFreq = simOpt.getFrequencyOfStorms();
 		
-		if(day % 1 == 0){
+		if(day % stormFreq == 0){
 			//stormy day every 15 days (approx 2 per month)
-			lowerQuantile = ZERO;
+			lowerQuantile = simOpt.getLowerQuartile();
 			isStorming = true;
 		} else {
 			//sunny day

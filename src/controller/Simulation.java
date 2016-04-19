@@ -208,8 +208,8 @@ public class Simulation {
 		BIOMASSOUTPUT.println(printString + "\tBioMass");
 		LIGHTOUTPUT.println(printString + "\tLightLevel");
 		DEPTHOUTPUT.println(printString + "\tWaterDepth");
-		if(statCount == 0)
-		STATISTICSOUTPUT.println("PatchID\tPop\tDensity Mean\t\tDensity Stdev\t\tLight Mean\t\tLight Stdev\t\tDepth mean\t\tDepth Stdev");
+		if(statCount == 1)
+		STATISTICSOUTPUT.println("Intensity\tFrequency\tPatchID\tPop\tDensity Mean\t\tDensity Stdev\t\tLight Mean\t\tLight Stdev\t\tDepth mean\t\tDepth Stdev");
 		
 	}
 
@@ -508,7 +508,18 @@ public class Simulation {
 		if(solarBehavior.isStorming()){
 			//turbid waters
 			// TODO: implement method to determine strength of storm
-			waterLightAttenuation = 2;
+			switch (simOptions.getLowerQuartile()){
+			
+			case SolarBehavior.ZERO:
+				waterLightAttenuation = 2;
+			case SolarBehavior.TWENTYFIVE:
+				waterLightAttenuation = 1.5;
+			case SolarBehavior.FIFTY:
+				waterLightAttenuation = 1;
+			case SolarBehavior.SEVENTYFIVE:
+				waterLightAttenuation = 0.5;
+			
+			}
 		} else {
 			//normal k
 			waterLightAttenuation = 0.5;
@@ -528,7 +539,7 @@ public class Simulation {
 			currentPatch.calculateMeansAndStdevsForPatch(field);
 			
 			//Print information about the patch
-			STATISTICSOUTPUT.println(currentPatch);
+			STATISTICSOUTPUT.println(simOptions.getLowerQuartile() + "\t" + simOptions.getFrequencyOfStorms() + "\t" + currentPatch);
 		}
 	}
 	
