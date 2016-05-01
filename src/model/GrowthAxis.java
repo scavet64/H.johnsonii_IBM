@@ -9,7 +9,7 @@ import java.util.Random;
  */
 public abstract class GrowthAxis {
 	
-	private final Random rng = new Random();		//Random number generator
+	protected final Random rng = new Random();		//Random number generator
 	public static final boolean RADIANS = true;
 	public static final boolean DEGREES = false;
 	
@@ -101,6 +101,8 @@ public abstract class GrowthAxis {
 	private double getRandomBranchingAngle(){
 		return rng.nextDouble() * 2.0 * Math.PI;
 	}
+
+	public abstract double getDaysAdded(double lightValueForDay);
 	
 	
 }

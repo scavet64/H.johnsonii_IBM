@@ -17,7 +17,7 @@ public class Cell {
 	private double seaFloorlight;					//fraction of incident light at the bottom
 	private double surfaceLight;					//light at the surface of the grid - even with the shoreline (1.0)
 	private double temperature;						//water temperature for entire grid in degree C
-	private int numberOfNodes;						//Number of nodes within the cell
+	private double numberOfNodes;						//Number of nodes within the cell
 	private double bioMass;							//normalized (0 to 1) effect on light hitting the bottom
 	
 	private double waterDepth;						//water depth in each cell each day from water level minus elevation
@@ -38,9 +38,17 @@ public class Cell {
 	 * This method must only be called after elevation and waterLevel have been set.
 	 */
 	public void generateWaterDepth() {
-		this.waterDepth = this.elevation - this.waterLevel;
+		this.waterDepth = -(this.elevation - this.waterLevel);
+		
 	}
-
+	
+	public void addSeagrass() {
+		numberOfNodes++;
+	}
+	
+	public void removeSeagrass(){
+		numberOfNodes--;
+	}
 	
 	/***********************Setters and getters***********************/
 	
@@ -117,14 +125,14 @@ public class Cell {
 	/**
 	 * @return the numberOfNodes
 	 */
-	public int getNumberOfNodes() {
+	public double getNumberOfNodes() {
 		return numberOfNodes;
 	}
 
 	/**
 	 * @param numberOfNodes the numberOfNodes to set
 	 */
-	public void setNumberOfNodes(int numberOfNodes) {
+	public void setNumberOfNodes(double numberOfNodes) {
 		this.numberOfNodes = numberOfNodes;
 	}
 

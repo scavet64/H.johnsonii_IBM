@@ -52,7 +52,6 @@ public class SimulationView extends JPanel {
 	public SimulationView(Simulation simulation){
 		
 		//this.simulation = simulation;
-		simulation.setSimView(this);
 		Dimension simDimension = simulation.getDimension();
 		//xLength = 150 * 10;
 		//yLength = 50 * 10;
@@ -61,7 +60,7 @@ public class SimulationView extends JPanel {
 		
 		xLength = (int) simDimension.getWidth() * startingScale;
 		yLength = (int) simDimension.getHeight() * startingScale ;
-		this.setBackground(Color.white);
+		this.setBackground(Color.black);
 		updateUI();
 		
 		this.addMouseWheelListener(new MouseWheelListener(){
@@ -85,7 +84,6 @@ public class SimulationView extends JPanel {
 				} else if(e.isShiftDown()){
 					//zoom = 1;
 				}
-				System.out.println("entered");
 				updateUI();
 			}
 			
@@ -140,6 +138,8 @@ public class SimulationView extends JPanel {
 					public void actionPerformed(ActionEvent e) {
 						zoom += zoom/2;
 						zooming = true;
+						translationX *= zoom;
+						translationY *= zoom;
 						repaint();
 					}
 				};
@@ -150,6 +150,8 @@ public class SimulationView extends JPanel {
 					public void actionPerformed(ActionEvent e) {
 						zoom -= zoom/2;
 						zooming = true;
+						translationX *= zoom;
+						translationY *= zoom;
 						repaint();
 					}
 				};
@@ -196,16 +198,19 @@ public class SimulationView extends JPanel {
         if(zooming){
         	graphics.translate((this.getWidth()/2) + translationX, this.getHeight()/2 + translationY);
         	//graphics.translate((this.getWidth()/2), this.getHeight()/2);
+        	//graphics.translate(translationX,translationY);
         	graphics.scale(zoom, zoom);
         	//graphics.translate(-(this.getWidth()/2), -(this.getHeight()/2));
         	graphics.translate(-(this.getWidth()/2) + translationX, -(this.getHeight()/2 + translationY));
+        	//graphics.translate(translationX,translationY);
         	//translationX = (int) ((translationX + this.getWidth()/2) - (translationX*zoom)/2);
         	//translationY = (int) ((translationY + this.getHeight()/2) - ((translationX*zoom)/2));
         	//graphics.translate(translationX, translationY);
         	//graphics.translate(((translationX + this.getWidth()/2) - (translationX*zoom)/2), (translationY + this.getHeight()/2) - ((translationX*zoom)/2));
         	//graphics.translate(((this.getWidth()/2) - (translationX*zoom)/2), (this.getHeight()/2) - ((translationX*zoom)/2));
-        	zooming = false;
-        } else {
+        	//graphics.translate(-translationX, -translationY);
+        	zooming = false;      
+       } else {
         	//graphics.scale(zoom, zoom);
         	//graphics.translate(translationX *zoom, translationY *zoom);
         	graphics.translate(translationX, translationY);
@@ -215,7 +220,7 @@ public class SimulationView extends JPanel {
         	
         }
         //graphics.scale(zoom, zoom);
-        graphics.setColor(Color.black);
+        graphics.setColor(Color.white);
         
         
         for(int x = OFFSET; x <= xLength+OFFSET; x=x+startingScale){
@@ -261,30 +266,4 @@ public class SimulationView extends JPanel {
 	        }
         }
 	}
-        
-//        for(Seagrass seagrass: population){
-//        	
-//        	double seagrassX = sg.getLocation().getxLocation() * 100;
-//			double seagrassY = seagrass.getLocation().getyLocation() * 100;
-//        	graphics.setColor(Color.green);
-//        	g1.drawOval((int)seagrassX + OFFSET , (int)seagrassY + OFFSET, 1, 1);
-//        	Location cl = seagrass.getChildLocation();
-//        	//Line2D.Double pc = seagrass.getParentalConnection();
-//        	if(cl != null){
-//        		
-//        		
-//        		graphics.setColor(Color.CYAN);
-//        		//System.out.println(seagrassX + " " + seagrassY);
-//        		System.out.println("node: X " + seagrassX + " PC:x " + (*10000);
-//        		//System.out.println("node: X " + seagrassX + " PC:x " + (((int)pc.getX1()*10000)));
-//        		//System.out.println("LINE CORDS:"+(((int)pc.x1*100)+30) + " " + (((int)pc.y1*100)+30) +" " + (((int)pc.x2*100)+30) +" " + (((int)pc.y2*100)+30));
-//        		graphics.drawLine(((int)pc.getX1()*100)+OFFSET, ((int)pc.getY1()*100)+OFFSET, (int)seagrassX , (int)seagrassY);
-//        	}
-//        	//get the seagrass cords
-//        	//draw line
-//        	
-//        	
-//        }
-	
-
 }

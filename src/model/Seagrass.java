@@ -1,7 +1,5 @@
 package model;
 
-import java.awt.geom.Line2D;
-
 /**
  * The Seagrass class for the Halophila johnsonii individual based model
  * This class represents the attributes that a seagrass individual would have
@@ -26,29 +24,27 @@ public class Seagrass {
 	private final int dayBorn;						//day a node is "born"
 	private int dayDied;							//day a node "dies"
 	private Location location;						//Location where the seagrass is located
-//	private double xCords;							//distance in meters in x direction from left bottom corner of grid
-//	private double yCords;							//distance in meters in y direction from left bottom corner of grid
 	private boolean isApical;						//true if node is on the apical stem
 	private boolean hasBranched;					//true if has branched
 	private final double angleOfCreation;			//angle in radians of node when created - 90 degrees = 1.57 radians
 	private double distanceForNewNode;				//distance according to growth that the new node will be from the parent node
 	private final int motherID;						//id of the mother
 	private double developmentProgress;				//progress until a new node is created
-	//private Line2D.Double parentalConnection;		//connection to its parent
 	private Location childLocation;					//location of its apical child
 	private Location branchChildLocation;			//location of its branched child
 	private GrowthAxis growthAxis;					//the axis of growth for this node 
+	private int patchID;							//the ID of its patch
 
 
 	/**
-	 * @param id
-	 * @param dayBorn
-	 * @param location
-	 * @param isApical
-	 * @param angleOfCreation
-	 * @param motherID
+	 * @param id Seagrass ID
+	 * @param dayBorn Date the seagrass was born
+	 * @param location Location the seagrass resides
+	 * @param isApical true if the seagrass node is apical
+	 * @param angleOfCreation the angle of creation relative to its parent's angle
+	 * @param motherID ID of the plants mother
 	 */
-	public Seagrass(int ID, int dayBorn, Location location, boolean isApical, double angleOfCreation, int motherID, GrowthAxis growthAxis) {
+	public Seagrass(int ID, int dayBorn, Location location, boolean isApical, double angleOfCreation, int motherID, GrowthAxis growthAxis, int patchID) {
 		super();
 		this.ID = ID;
 		this.dayBorn = dayBorn;
@@ -62,58 +58,30 @@ public class Seagrass {
 		this.hasBranched = false;
 		this.developmentProgress = 0.0;
 		this.age = 0;
-		//this.parentalConnection = null;
 		this.growthAxis = growthAxis;
+		this.patchID = patchID;
 	}
-	
-	/**
-	 * @return the branchChildLocation
-	 */
-	public Location getBranchChildLocation() {
-		return branchChildLocation;
-	}
-
-	/**
-	 * @param branchChildLocation the branchChildLocation to set
-	 */
-	public void setBranchChildLocation(Location branchChildLocation) {
-		this.branchChildLocation = branchChildLocation;
-	}
-
-	/**
-	 * @return the childLocation
-	 */
-	public Location getChildLocation() {
-		return childLocation;
-	}
-
-	/**
-	 * @param childLocation the childLocation to set
-	 */
-	public void setChildLocation(Location childLocation) {
-		this.childLocation = childLocation;
-	}
-
-//	public Line2D.Double getParentalConnection(){
-//		return parentalConnection;
-//	}
-//	
-//	public void setParentalConnection(Line2D.Double parentalConnection){
-//		this.parentalConnection = parentalConnection;
-//	}
 	
 	public void growth(double lightValueForDay){
-		double daysToNode = develop(lightValueForDay);
+		//double daysToNode = develop(lightValueForDay); //old way
+		
+		double daysToNode = growthAxis.getDaysAdded(lightValueForDay * 100);
 		developmentProgress = developmentProgress + (1/daysToNode);
 		
 		double mmAdded = distance(lightValueForDay);
-		distanceForNewNode = distanceForNewNode + (mmAdded/1000.0);
-		//age++;
+//		distanceForNewNode = distanceForNewNode + (mmAdded/1000.0); /* IF CELL IS A METER^2 */
+//		distanceForNewNode = distanceForNewNode + (mmAdded/10.0); /* IF CELL IS A CENTIMETER^2 */
+		distanceForNewNode = distanceForNewNode + (mmAdded/100.0); /* IF CELL IS A DECIMETER^2 */
+		age++;
 	}
 	
 	/**
-	 * Attempting to refactor
-	 * @return newly created Seagrass
+	 * creates a new seagrass child based upon this seagrass information
+	 * @param XLENGTH X length of the field
+	 * @param YLENGTH Y length of the field
+	 * @param runningIDCounter Running ID counter of seagrass children
+	 * @param dayCounter The current day in the simulation
+	 * @return A new Seagrass child
 	 */
 	public Seagrass createChild(int XLENGTH, int YLENGTH, int runningIDCounter, int dayCounter){
 		Seagrass child = null;
@@ -146,7 +114,7 @@ public class Seagrass {
 		}
 		
 		//create the seagrass object
-		child = new Seagrass(runningIDCounter, dayCounter, newLoc, true, theta, ID, childGrowthAxis);
+		child = new Seagrass(runningIDCounter, dayCounter, newLoc, true, theta, ID, childGrowthAxis, patchID);
 		
 		//Modifies the current status of the seagrass and assigns the child's location for GUI use.
 		if(isApical){
@@ -159,10 +127,12 @@ public class Seagrass {
 		
 		//sets the development progress back to 0 to start the process over again
 		developmentProgress = 0.0;
+		distanceForNewNode = 0.0;
 
 		return child;
 	}
 	
+	@Deprecated
 	/**
 	 * Depreciated as of 3/18/2016 - refactored age++ into growth method
 	 * Increments the age of the node.
@@ -173,6 +143,8 @@ public class Seagrass {
 		age++;
 	}
 	
+	@SuppressWarnings("unused")
+	@Deprecated
 	private double develop(double availableLight){
 //		  This function relates development time towards producing a
 //		      new node to the light level in a cell
@@ -197,6 +169,7 @@ public class Seagrass {
 //		  develop=y
 //		  RETURN
 //		END
+		availableLight *= 100; //TODO Is this right?
 		double y = 8.151507772603294 + 6.849203199969538 * Math.exp((-availableLight)/14.26707601933104);
 		return y;
 	
@@ -242,9 +215,36 @@ public class Seagrass {
 				+ ", developmentProgress=" + developmentProgress + "]";
 	}
 	
-	
 	/***********************Setters and getters***********************/
+	
+	
+	/**
+	 * @return the branchChildLocation
+	 */
+	public Location getBranchChildLocation() {
+		return branchChildLocation;
+	}
 
+	/**
+	 * @param branchChildLocation the branchChildLocation to set
+	 */
+	public void setBranchChildLocation(Location branchChildLocation) {
+		this.branchChildLocation = branchChildLocation;
+	}
+
+	/**
+	 * @return the childLocation
+	 */
+	public Location getChildLocation() {
+		return childLocation;
+	}
+
+	/**
+	 * @param childLocation the childLocation to set
+	 */
+	public void setChildLocation(Location childLocation) {
+		this.childLocation = childLocation;
+	}
 
 	/**
 	 * @return the age
@@ -379,6 +379,20 @@ public class Seagrass {
 	 */
 	public int getMotherID() {
 		return motherID;
+	}
+
+	/**
+	 * @return the patchID
+	 */
+	public int getPatchID() {
+		return patchID;
+	}
+
+	/**
+	 * @param patchID the patchID to set
+	 */
+	public void setPatchID(int patchID) {
+		this.patchID = patchID;
 	}
 
 }

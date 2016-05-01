@@ -19,4 +19,12 @@ public class SecondaryAxis extends GrowthAxis {
 		return null;
 	}
 
+	@Override
+	public double getDaysAdded(double lightValueForDay) {
+		double daysAdded = (0.0004 * (lightValueForDay * lightValueForDay)) - (0.1015 * lightValueForDay) + 14.487;
+		daysAdded += rng.nextGaussian() + 5.530;
+		
+		return daysAdded;
+	}
+
 }

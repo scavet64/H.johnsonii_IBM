@@ -35,7 +35,7 @@ public class Field {
 		return field[xlength][ylength];
 	}
 	
-	public Cell getCellFromLocation(Location location){
+	public Cell getCellFromLocation(Location location){		
 		return getCellFromCords(location.getIntegerX(), location.getIntegerY());
 	}
 

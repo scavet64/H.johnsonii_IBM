@@ -12,19 +12,25 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Queue;
 import java.util.Random;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import model.Cell;
 import model.Field;
 import model.Location;
+import model.Patch;
 import model.Seagrass;
 import model.SimulationOptions;
+import model.SolarBehavior;
+import view.SimulationGUI;
 import view.SimulationView;
 
 /**
- * The Simulation class for the Halophila johnsonii individual based model
- * Much of this model has been based upon the existing FORTRAN code provided 
+ * The Simulation class for the <i>Halophila johnsonii</i> individual based model
+ * Much of this model has been based upon the existing FORTRAN code shell provided 
  * and written by Dr. Richmond and Dr. Rose.
  * 
  * @author Vincent Scavetta
@@ -43,8 +49,11 @@ public class Simulation {
 	private final int numberOfRecuits;				//number of starting nodes
 	
 	//Attributes that are hard coded
-	private final double SEAFLOOR_SLOPE = 0.01;		//The slope of the seafloor from the shore
-	private double LIGHT_ATTENUATION = 0.2;			//light attenuation coefficient due to everything but shading by other seagrasses
+	//private final double SEAFLOOR_SLOPE = 0.1;		//The slope of the seafloor from the shore **IF CELL IS A METER^2**
+	//private final double SEAFLOOR_SLOPE = 0.001;		//The slope of the seafloor from the shore **IF CELL IS CENTIMETER^2**
+	private final double SEAFLOOR_SLOPE = 0.01;			//The slope of the seafloor from the shore **IF CELL IS DECIMETER^2**
+	public static final double CELL_AREA = 1;			//The area of each cell (1^2 decimeter)
+	private double waterLightAttenuation = 1.2;			//light attenuation coefficient due to everything but shading by other seagrasses
 	
 	//file writers
 	private PrintStream LIGHTOUTPUT;
@@ -53,6 +62,7 @@ public class Simulation {
 	private PrintStream BIOMASSOUTPUT;
 	private PrintStream DEPTHOUTPUT;
 	private PrintStream DAILYOUTPUT;
+	private static PrintStream STATISTICSOUTPUT;		//static so that multiple simulations can be written to same file
 	
 	//Data structures
 	private ArrayList<Seagrass> population;			//population of seagrass
@@ -66,11 +76,14 @@ public class Simulation {
 	private int yearCounter;						//counts the years of the simulation
 	private int runningIDCounter;					//holds the value that represents the next available id 
 	private int numNodesCreatedToday;				//Counts the number of nodes that were created on the day
+	private static int statCount;					//static counter so that multiple simulations can be written to same file
 	
 	//Extra utilities required
-	private SimulationView simView;					//simulation view that is needed to repaint the nodes
+	private SimulationGUI simGUI;					//simulation view that is needed to repaint the nodes
 	private SimulationOptions simOptions;			//holds the changeable options for this run of the simulation
 	private final Random rng = new Random();		//Random number generator
+	private final SolarBehavior solarBehavior = new SolarBehavior();
+	private double surfaceLight;
 	
 	public Simulation(SimulationOptions simOptions) {
 		this.simOptions = simOptions;
@@ -88,27 +101,12 @@ public class Simulation {
 		
 		//setup field and population arrays
 		field = new Field(XLENGTH,YLENGTH);
-		population = new ArrayList<Seagrass>();
+		population = new ArrayList<Seagrass>(MAX_NODES);
 		perishedPopulation = new ArrayList<Seagrass>();
 	
 		setPrintStreams();
-	}
-	
-	public void setSimView(SimulationView simView){
-		this.simView = simView;
-	}
-	
-	private void setPrintStreams() {
-		try {
-			LIGHTOUTPUT = new PrintStream(new File("Light.txt"));			
-			NODEOUTPUT = new PrintStream(new File("Nodes.txt"));			
-			ELEVATIONOUTPUT = new PrintStream(new File("Elevation.txt"));			
-			BIOMASSOUTPUT = new PrintStream(new File("biomass.txt"));
-			DEPTHOUTPUT = new PrintStream(new File("Depth.txt"));
-			DAILYOUTPUT = new PrintStream(new File("Daily.txt"));
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		printHeaders();
+		statCount++;
 	}
 	
 	/**
@@ -126,9 +124,9 @@ public class Simulation {
 	 * @throws Exception Throws an Exception if the user wants to stop the simulation, stopping the thread
 	 */
 	public void runSimulation(int years, int days) throws Exception{
-		printHeaders();
 		setupGrid();
-		setupInitialConditions();
+		//setupInitialConditions();
+		setupDeterminedInitialConditions();
 		
 		//converts years into days 
 		int daysToRun = days + (years * 365);
@@ -140,6 +138,10 @@ public class Simulation {
 			//resets the node counter to zero
 			numNodesCreatedToday = 0;
 			
+			calculateSurfaceLightForDay();
+			
+			calculateWaterLightAttenuation();
+			
 			//updates the cell conditions for the day
 			updateCellsForDay();
 			
@@ -148,7 +150,7 @@ public class Simulation {
 			
 			//print current population every month
 			if(dayCounter % 30 == 0){
-				dailyOut();
+				//dailyOut();
 			}
 			
 			//prints the current year, day, population size, perished population size, and number of nodes created today.
@@ -160,16 +162,20 @@ public class Simulation {
 //								+ " Dead Population " + perishedPopulation.size() + " Nodes Created Today: " + numNodesCreatedToday);
 			
 			//increment the day
-			System.out.println(dayCounter);
+			//System.out.println(dayCounter);
+			if(simGUI != null){
+				simGUI.repaintView();
+				simGUI.updateDayLabel(dayCounter);
+				simGUI.updatePopulationLabel(population.size());
+			}
 			dayCounter++;
-			simView.repaint();
-			Thread.sleep(100);
+			//Thread.sleep(100);
 			
 			
 		}
 		
 		//calculate density and report for each recruit
-		
+		printStatisticsForEachPatch();
 		System.out.println("All Done");
 		
 	}
@@ -183,7 +189,24 @@ public class Simulation {
 		BIOMASSOUTPUT.println(printString + "\tBioMass");
 		LIGHTOUTPUT.println(printString + "\tLightLevel");
 		DEPTHOUTPUT.println(printString + "\tWaterDepth");
+		if(statCount == 0)
+		STATISTICSOUTPUT.println("Intensity\tFrequency\tPatchID\tPop\tDensity Mean\t\tDensity Stdev\t\tLight Mean\t\tLight Stdev\t\tDepth mean\t\tDepth Stdev");
 		
+	}
+
+	private void setPrintStreams() {
+		try {
+			LIGHTOUTPUT = new PrintStream(new File("Light.txt"));			
+			NODEOUTPUT = new PrintStream(new File("Nodes.txt"));			
+			ELEVATIONOUTPUT = new PrintStream(new File("Elevation.txt"));			
+			BIOMASSOUTPUT = new PrintStream(new File("biomass.txt"));
+			DEPTHOUTPUT = new PrintStream(new File("Depth.txt"));
+			DAILYOUTPUT = new PrintStream(new File("Daily.txt"));
+			if(statCount == 0)
+			STATISTICSOUTPUT = new PrintStream(new File(statCount+"Statistics.txt"));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	/**
@@ -200,13 +223,45 @@ public class Simulation {
 			Location randLoc = new Location(randomX, randomY);
 	
 										//ID, age, Location, isApical, angle, MotherID)
-			population.add(new Seagrass(runningIDCounter, 1, randLoc, true, 0.0, runningIDCounter, Seagrass.PRIMARYAXIS));
+			population.add(new Seagrass(runningIDCounter, 1, randLoc, true, 0.0, runningIDCounter, Seagrass.PRIMARYAXIS, runningIDCounter));
 			runningIDCounter++;
 		}
 		
 		//for testing zoom
-		Location loc = new Location(1, 1);
-		population.add(new Seagrass(runningIDCounter, 1, loc, true, 0.0, runningIDCounter, Seagrass.PRIMARYAXIS));
+		Location loc = new Location(5, 495);
+		population.add(new Seagrass(runningIDCounter, 1, loc, true, 0.0, runningIDCounter, Seagrass.PRIMARYAXIS, runningIDCounter));
+		runningIDCounter++;
+		
+	}
+	
+	private void setupDeterminedInitialConditions() {		
+		//for testing zoom
+//		Location loc = new Location(5, 5);
+//		population.add(new Seagrass(runningIDCounter, 1, loc, true, 0.0, runningIDCounter, Seagrass.PRIMARYAXIS, runningIDCounter));
+//		runningIDCounter++;
+		
+		int middleX = XLENGTH / 2;
+		
+		//for testing zoom
+		Location loc = new Location(middleX, 450);
+		population.add(new Seagrass(runningIDCounter, 1, loc, true, 0.0, runningIDCounter, Seagrass.PRIMARYAXIS, runningIDCounter));
+		runningIDCounter++;
+		
+		loc = new Location(middleX, 350);
+		population.add(new Seagrass(runningIDCounter, 1, loc, true, 0.0, runningIDCounter, Seagrass.PRIMARYAXIS, runningIDCounter));
+		runningIDCounter++;
+		
+		loc = new Location(middleX, 250);
+		population.add(new Seagrass(runningIDCounter, 1, loc, true, 0.0, runningIDCounter, Seagrass.PRIMARYAXIS, runningIDCounter));
+		runningIDCounter++;
+		
+		loc = new Location(middleX, 150);
+		population.add(new Seagrass(runningIDCounter, 1, loc, true, 0.0, runningIDCounter, Seagrass.PRIMARYAXIS, runningIDCounter));
+		runningIDCounter++;
+		
+		loc = new Location(middleX, 50);
+		population.add(new Seagrass(runningIDCounter, 1, loc, true, 0.0, runningIDCounter, Seagrass.PRIMARYAXIS, runningIDCounter));
+		runningIDCounter++;
 		
 	}
 
@@ -227,7 +282,6 @@ public class Simulation {
 		for(int i = 0; i < populationSize; i++){
 			//Get the current node to work with and its location
 			Seagrass node = population.get(i);
-			Location location = node.getLocation();
 			
 			//get the cell the node is located in
 			Cell nodesCell = field.getCellFromLocation(node.getLocation());
@@ -238,80 +292,33 @@ public class Simulation {
 			//check to see if the development progress has reached completion.  >= 1 is complete
 			if(node.getDevelopmentProgress() >= 1 && (node.isApical() || !node.isHasBranched())){
 				
-				
 				//if the population reaches the max, stop the adding process
 				if(populationSize >= MAX_NODES){
-					System.out.println("reached Max Nodes");
-					throw new Exception();
+					//System.out.println("reached Max Nodes");
+					throw new Exception("reached Max Nodes");
 				} else {
-					
-//					//time to make a new node!
-//					double theta;
-//					
-//					//if the node is apical, continue the path of growth
-//					if(node.isApical()){
-//						theta = node.getAngleOfCreation();
-//					} else {
-//						theta = rng.nextDouble() * 2.0 * Math.PI;
-//					}
-//					
-//					//get the adjacent and opposite lengths for theta using the distance from the mother.
-//					double adj = Math.cos(theta) * node.getDistanceFromMother();		//distance on the X axis
-//					double opp = Math.sin(theta) * node.getDistanceFromMother();		//distance on the Y axis
-//					
-////					if(dayCounter == 15){
-////						//print some information
-////					}
-//					
-//					//add the opp and adj to the mothers location to create the new nodes coordinates 
-//					double newNodeX = location.getxLocation() + adj;
-//					double newNodeY = location.getyLocation() + opp;
-//					
-//					//'bounce' the node away from the edge of the field.
-//					//unsure if this will change or stay in.
-//					if(newNodeX > XLENGTH || newNodeX < 0){
-//						newNodeX = newNodeX + (2 * (-adj));
-//					}
-//					if(newNodeY > YLENGTH || newNodeY < 0){
-//						newNodeY = newNodeY + (2 * (-opp));
-//					}
-//					
-//					Location newLoc = new Location(newNodeX, newNodeY);
-//					newNodesForTheDay.add(new Seagrass(runningIDCounter, dayCounter, newLoc, true, theta, node.getID(), null));
-//					
-//					if(node.isApical()){
-//						node.setApical(false);
-//						node.setChildLocation(newLoc);
-//					} else if(!node.isHasBranched()){
-//						node.setHasBranched(true);
-//						node.setBranchChildLocation(newLoc);
-//					}
-//					node.setDevelopmentProgress(0.0);
-					
+					Seagrass newNode = null;
 					//this will determine if the node is branching or continuing on its axis
-					//If branching, there is a chance it may not occur
 					if(!node.isApical()){
-						if(rng.nextInt(100) < 25){
-							newNodesForTheDay.add(node.createChild(XLENGTH, YLENGTH, runningIDCounter, dayCounter));
-							runningIDCounter++;
-							numNodesCreatedToday++;
-						} else {
-							node.setDevelopmentProgress(0);
-						}
+						newNode = node.createChild(XLENGTH, YLENGTH, runningIDCounter, dayCounter);
+						newNodesForTheDay.add(newNode);
 					} else {
-						newNodesForTheDay.add(node.createChild(XLENGTH, YLENGTH, runningIDCounter, dayCounter));
-						runningIDCounter++;
-						numNodesCreatedToday++;
+						newNode = node.createChild(XLENGTH, YLENGTH, runningIDCounter, dayCounter);
+						newNodesForTheDay.add(newNode);
 					}
+					field.getCellFromLocation(newNode.getLocation()).addSeagrass();
+					runningIDCounter++;
+					numNodesCreatedToday++;
 				}
 			}
 			
 			//if the node is older than 50 days old, the node dies of old age
 			if(node.getAge() > 50){
 				node.setDayDied(dayCounter);
+				field.getCellFromLocation(node.getLocation()).removeSeagrass();
 				perishedNodesForTheDay.add(node);
 			} else {
-				node.incrementAge();
+				//node.incrementAge();
 			}
 		}
 		
@@ -342,25 +349,31 @@ public class Simulation {
 			NODEOUTPUT.println(yearCounter + "\t" + dayCounter + "\t" + population.get(i).toString());
 		}
 		
-		//run through the cells
-		for(int currentY = 0; currentY < YLENGTH; currentY++){
+		//run through every 10 cells
+		for(int currentY = 0; currentY < YLENGTH; currentY += 10){
 			
-			for(int currentX = 0; currentX < XLENGTH; currentX++){
+			for(int currentX = 0; currentX < XLENGTH; currentX += 10){
 				Cell currentCell = field.getCellFromCords(currentX, currentY);
 				String printString = dayCounter + "\t\t" + currentX + "\t\t" + currentY;
 				
 				BIOMASSOUTPUT.println(printString + "\t\t" + currentCell.getBioMass());
 				LIGHTOUTPUT.println(printString + "\t\t" + currentCell.getSeaFloorlight());
 				DEPTHOUTPUT.println(printString + "\t\t" + currentCell.getWaterDepth());
-				
-				//Old printing Style
-//				String printString = "CurrentDay: " + dayCounter + " Xlocation: " + currentX + " YLocation: " + currentY;
-//				
-//					BIOMASSOUTPUT.println(printString + " BioMass: " + currentCell.getBioMass());
-//					LIGHTOUTPUT.println(printString + " LightLevel: " + currentCell.getSeaFloorlight());
-//					DEPTHOUTPUT.println(printString + " WaterDepth: " + currentCell.getWaterDepth());
 			}
 		}
+		
+		//run through ALL the cells
+//		for(int currentY = 0; currentY < YLENGTH; currentY++){
+//			
+//			for(int currentX = 0; currentX < XLENGTH; currentX++){
+//				Cell currentCell = field.getCellFromCords(currentX, currentY);
+//				String printString = dayCounter + "\t\t" + currentX + "\t\t" + currentY;
+//				
+//				BIOMASSOUTPUT.println(printString + "\t\t" + currentCell.getBioMass());
+//				LIGHTOUTPUT.println(printString + "\t\t" + currentCell.getSeaFloorlight());
+//				DEPTHOUTPUT.println(printString + "\t\t" + currentCell.getWaterDepth());
+//			}
+//		}
 		
 	}
 
@@ -382,13 +395,7 @@ public class Simulation {
 				cell.setWaterLevel(generateWaterLevel());		//FORTRAN: call waterdepth
 				cell.generateWaterDepth();
 				assignOtherSpecies(cell);
-				assignCellLight(cell);
-				
-//				if(dayCounter == 0){
-//					LIGHTOUTPUT.println("Xlocation: " + currentX + " YLocation: " + currentY + " LightLevel: " + cell.getSeaFloorlight());
-//					LIGHTOUTPUT.flush();
-//				}
-				
+				assignCellLight(cell);				
 			}
 		}
 	}
@@ -411,7 +418,7 @@ public class Simulation {
 				Cell cell = new Cell();
 				
 				//assigns environmental factors
-				cell.setElevation((currentY+1)*SEAFLOOR_SLOPE);
+				cell.setElevation( -((currentY+1)*SEAFLOOR_SLOPE));
 				cell.setWaterLevel(generateWaterLevel());
 				cell.generateWaterDepth();
 				
@@ -420,15 +427,8 @@ public class Simulation {
 				
 				//print to output file
 				ELEVATIONOUTPUT.println(currentX + "\t" + currentY + "\t" + cell.getElevation());
-				
-				//old style of printing
-//				System.out.println("CellX: " + currentX + "CellY: " + currentY + "Elevation: " + cell.getElevation() +
-//						"WaterDepth: " + cell.getWaterDepth());
-//				ELEVATIONOUTPUT.println("CellX: " + currentX + "CellY: " + currentY + "Elevation: " + cell.getElevation());
 			}
 		}
-		
-		//DrawGrid
 	}
 
 	/**
@@ -438,7 +438,7 @@ public class Simulation {
 	 * @return the waterlevel for the current day
 	 */
 	private double generateWaterLevel() {
-		return 0.5;
+		return 0; //0 = average
 	}
 	
 	/**
@@ -458,8 +458,7 @@ public class Simulation {
 	 * @param cell The cell that will be modified
 	 */
 	private void assignCellLight(Cell cell){
-		double surfaceLight = calculateSurfaceLight(dayCounter);		// from function surlight in FORTRAN code
-		double seaFloorLight = surfaceLight * Math.exp(-LIGHT_ATTENUATION*cell.getWaterDepth()) * cell.getBioMass();
+		double seaFloorLight = surfaceLight * Math.exp(-waterLightAttenuation*cell.getWaterDepth()) * cell.getBioMass();
 		if(seaFloorLight < 0.0){
 			seaFloorLight = 0.0;
 		}
@@ -468,12 +467,12 @@ public class Simulation {
 	
 	/**
 	 * Based upon function 'surlight'
-	 * As of 2/11 function will return the same value each time.
+	 * As of 4/16 function calls the getRandomIrradianceForDay.
 	 * TODO: implement more functionality
 	 * @param day The day to calculate sunlight for
 	 */
-	private double calculateSurfaceLight(int day){
-		return 0.9;
+	private void calculateSurfaceLightForDay(){
+		surfaceLight = solarBehavior.getRandomIrradianceForDay(dayCounter);
 	}
 	
 	/**
@@ -483,36 +482,68 @@ public class Simulation {
 	 * 			have rare days where the attenuation will increase drastically to simulate when cedar water is released
 	 * 
 	 */
-	private void assignLightAttenuationForDay(int day){
+	private void calculateWaterLightAttenuation() {
+		if(solarBehavior.isStorming()){
+			//turbid waters
+			
+			//simple version for now, depends on predetermined storm strength
+			switch (simOptions.getLowerQuartile()){
+			
+			case SolarBehavior.ZERO:
+				waterLightAttenuation = 2;
+			case SolarBehavior.TWENTYFIVE:
+				waterLightAttenuation = 1.5;
+			case SolarBehavior.FIFTY:
+				waterLightAttenuation = 1;
+			case SolarBehavior.SEVENTYFIVE:
+				waterLightAttenuation = 0.5;
+			
+			}
+		} else {
+			//normal k
+			waterLightAttenuation = 0.5;
+		}
 		
 	}
 	
 	/**
-	 * Calculates the density for a given patch
-	 * TODO iterate through patch and find the cells it resides in (2D-Array of cells??) (Maybe a X -> Y -> Cell map??)
-	 * 		Calculate the density for each cell
-	 * 			For every node in the patch, 
-	 * 		Take average of each density and standard Deviation
-	 * 
+	 * prints the stats for each of the patches
 	 */
-	private void calculateDensityForPatches(){
-		
+	private void printStatisticsForEachPatch(){
+		HashMap<Integer, Patch> patchIDtoPatchCollectionMap = getPatchesFromPopulation();
+		//System.out.println(patchIDtoPatchCollectionMap);
+		for(Integer patchID: patchIDtoPatchCollectionMap.keySet()){
+			//calculate the data for each patch
+			Patch currentPatch = patchIDtoPatchCollectionMap.get(patchID);
+			currentPatch.calculateMeansAndStdevsForPatch(field);
+			
+			//Print information about the patch
+			STATISTICSOUTPUT.println(simOptions.getLowerQuartile() + "\t" + simOptions.getFrequencyOfStorms() + "\t" + currentPatch);
+		}
 	}
+	
 	/**
 	 * Returns an array of patches from the population
 	 * TODO How?
-	 * 		Run though each cell
+	 * 		Run though population
+	 * 			put every seagrass into map with patchID as key and patch as the value
+	 * 				add the seagrass to the patch
 	 */
-	private void getPatchesFromPopulation(){
+	private HashMap<Integer, Patch> getPatchesFromPopulation(){
+		HashMap<Integer, Patch> patchIDtoPatchCollectionMap = new HashMap<Integer, Patch>();
 		
-	}
-	
-	/**
-	 * Alternative to finding patches using iteration though field rather than population
-	 * 
-	 */
-	private void getPatchesFromCells(){
+		for(Seagrass seagrass: population){
+			Integer patchID = seagrass.getPatchID();
+			if(patchIDtoPatchCollectionMap.containsKey(patchID)){
+				patchIDtoPatchCollectionMap.get(patchID).add(seagrass);
+			} else {
+				Patch patch = new Patch(patchID);
+				patch.add(seagrass);
+				patchIDtoPatchCollectionMap.put(patchID, patch);
+			}
+		}
 		
+		return patchIDtoPatchCollectionMap;
 	}
 	
 	/***********************Setters and getters***********************/
@@ -524,6 +555,10 @@ public class Simulation {
 
 	public ArrayList<Seagrass> getPopulation() {
 		return population;
+	}
+
+	public void setSimGUI(SimulationGUI simGUI){
+		this.simGUI = simGUI;
 	}
 	
 //	private void setOutputFile(String fileName){
