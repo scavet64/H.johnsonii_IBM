@@ -137,13 +137,6 @@ public class SimulationOptions {
 		return singleInstance;
 	}
 
-	/**
-	 * @param singleInstance the singleInstance to set
-	 */
-	public void setSingleInstance(SimulationOptions singleInstance) {
-		this.singleInstance = singleInstance;
-	}
-
 	public int getMaxNodes() {
 		return maxNodes;
 	}

@@ -194,37 +194,4 @@ public class MainGUI extends JFrame {
 		}
 		
 	}
-	
-	
-	
-//	class SimulationThread extends Thread{
-//		
-//		Simulation sim;
-//		
-//		public SimulationThread(Simulation sim){
-//			this.sim = sim;
-//		}
-//        
-//		public void run()
-//        {
-//			try {
-//				sim.runSimulation(0, 200);
-//				pause();
-//			} catch (Exception e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			}
-//        }
-//        
-//        private void pause()
-//        {
-//            try {
-//                Thread.sleep(3000);   // pause for 3000 milliseconds
-//            }
-//            catch (InterruptedException exc) {
-//            }
-//        }
-//	}
-
-
 }

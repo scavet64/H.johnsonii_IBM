@@ -266,30 +266,4 @@ public class SimulationView extends JPanel {
 	        }
         }
 	}
-        
-//        for(Seagrass seagrass: population){
-//        	
-//        	double seagrassX = sg.getLocation().getxLocation() * 100;
-//			double seagrassY = seagrass.getLocation().getyLocation() * 100;
-//        	graphics.setColor(Color.green);
-//        	g1.drawOval((int)seagrassX + OFFSET , (int)seagrassY + OFFSET, 1, 1);
-//        	Location cl = seagrass.getChildLocation();
-//        	//Line2D.Double pc = seagrass.getParentalConnection();
-//        	if(cl != null){
-//        		
-//        		
-//        		graphics.setColor(Color.CYAN);
-//        		//System.out.println(seagrassX + " " + seagrassY);
-//        		System.out.println("node: X " + seagrassX + " PC:x " + (*10000);
-//        		//System.out.println("node: X " + seagrassX + " PC:x " + (((int)pc.getX1()*10000)));
-//        		//System.out.println("LINE CORDS:"+(((int)pc.x1*100)+30) + " " + (((int)pc.y1*100)+30) +" " + (((int)pc.x2*100)+30) +" " + (((int)pc.y2*100)+30));
-//        		graphics.drawLine(((int)pc.getX1()*100)+OFFSET, ((int)pc.getY1()*100)+OFFSET, (int)seagrassX , (int)seagrassY);
-//        	}
-//        	//get the seagrass cords
-//        	//draw line
-//        	
-//        	
-//        }
-	
-
 }

@@ -29,8 +29,8 @@ import view.SimulationGUI;
 import view.SimulationView;
 
 /**
- * The Simulation class for the Halophila johnsonii individual based model
- * Much of this model has been based upon the existing FORTRAN code provided 
+ * The Simulation class for the <i>Halophila johnsonii</i> individual based model
+ * Much of this model has been based upon the existing FORTRAN code shell provided 
  * and written by Dr. Richmond and Dr. Rose.
  * 
  * @author Vincent Scavetta
@@ -49,9 +49,9 @@ public class Simulation {
 	private final int numberOfRecuits;				//number of starting nodes
 	
 	//Attributes that are hard coded
-	//private final double SEAFLOOR_SLOPE = 0.01;		//The slope of the seafloor from the shore **IF CELL IS A METER^2**
-	//private final double SEAFLOOR_SLOPE = 0.0001;		//The slope of the seafloor from the shore **IF CELL IS CENTIMETER^2**
-	private final double SEAFLOOR_SLOPE = 0.01;		//The slope of the seafloor from the shore **IF CELL IS DECIMETER^2**
+	//private final double SEAFLOOR_SLOPE = 0.1;		//The slope of the seafloor from the shore **IF CELL IS A METER^2**
+	//private final double SEAFLOOR_SLOPE = 0.001;		//The slope of the seafloor from the shore **IF CELL IS CENTIMETER^2**
+	private final double SEAFLOOR_SLOPE = 0.01;			//The slope of the seafloor from the shore **IF CELL IS DECIMETER^2**
 	public static final double CELL_AREA = 1;			//The area of each cell (1^2 decimeter)
 	private double waterLightAttenuation = 1.2;			//light attenuation coefficient due to everything but shading by other seagrasses
 	
@@ -62,7 +62,7 @@ public class Simulation {
 	private PrintStream BIOMASSOUTPUT;
 	private PrintStream DEPTHOUTPUT;
 	private PrintStream DAILYOUTPUT;
-	private static PrintStream STATISTICSOUTPUT;
+	private static PrintStream STATISTICSOUTPUT;		//static so that multiple simulations can be written to same file
 	
 	//Data structures
 	private ArrayList<Seagrass> population;			//population of seagrass
@@ -76,7 +76,7 @@ public class Simulation {
 	private int yearCounter;						//counts the years of the simulation
 	private int runningIDCounter;					//holds the value that represents the next available id 
 	private int numNodesCreatedToday;				//Counts the number of nodes that were created on the day
-	private static int statCount;
+	private static int statCount;					//static counter so that multiple simulations can be written to same file
 	
 	//Extra utilities required
 	private SimulationGUI simGUI;					//simulation view that is needed to repaint the nodes
@@ -105,26 +105,8 @@ public class Simulation {
 		perishedPopulation = new ArrayList<Seagrass>();
 	
 		setPrintStreams();
+		printHeaders();
 		statCount++;
-	}
-	
-	public void setSimGUI(SimulationGUI simGUI){
-		this.simGUI = simGUI;
-	}
-	
-	private void setPrintStreams() {
-		try {
-			LIGHTOUTPUT = new PrintStream(new File("Light.txt"));			
-			NODEOUTPUT = new PrintStream(new File("Nodes.txt"));			
-			ELEVATIONOUTPUT = new PrintStream(new File("Elevation.txt"));			
-			BIOMASSOUTPUT = new PrintStream(new File("biomass.txt"));
-			DEPTHOUTPUT = new PrintStream(new File("Depth.txt"));
-			DAILYOUTPUT = new PrintStream(new File("Daily.txt"));
-			if(statCount == 0)
-			STATISTICSOUTPUT = new PrintStream(new File(statCount+"Statistics.txt"));
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
 	}
 	
 	/**
@@ -142,7 +124,6 @@ public class Simulation {
 	 * @throws Exception Throws an Exception if the user wants to stop the simulation, stopping the thread
 	 */
 	public void runSimulation(int years, int days) throws Exception{
-		printHeaders();
 		setupGrid();
 		//setupInitialConditions();
 		setupDeterminedInitialConditions();
@@ -194,7 +175,7 @@ public class Simulation {
 		}
 		
 		//calculate density and report for each recruit
-		printDensityForEachPatch();
+		printStatisticsForEachPatch();
 		System.out.println("All Done");
 		
 	}
@@ -208,9 +189,24 @@ public class Simulation {
 		BIOMASSOUTPUT.println(printString + "\tBioMass");
 		LIGHTOUTPUT.println(printString + "\tLightLevel");
 		DEPTHOUTPUT.println(printString + "\tWaterDepth");
-		if(statCount == 1)
+		if(statCount == 0)
 		STATISTICSOUTPUT.println("Intensity\tFrequency\tPatchID\tPop\tDensity Mean\t\tDensity Stdev\t\tLight Mean\t\tLight Stdev\t\tDepth mean\t\tDepth Stdev");
 		
+	}
+
+	private void setPrintStreams() {
+		try {
+			LIGHTOUTPUT = new PrintStream(new File("Light.txt"));			
+			NODEOUTPUT = new PrintStream(new File("Nodes.txt"));			
+			ELEVATIONOUTPUT = new PrintStream(new File("Elevation.txt"));			
+			BIOMASSOUTPUT = new PrintStream(new File("biomass.txt"));
+			DEPTHOUTPUT = new PrintStream(new File("Depth.txt"));
+			DAILYOUTPUT = new PrintStream(new File("Daily.txt"));
+			if(statCount == 0)
+			STATISTICSOUTPUT = new PrintStream(new File(statCount+"Statistics.txt"));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	/**
@@ -298,33 +294,21 @@ public class Simulation {
 				
 				//if the population reaches the max, stop the adding process
 				if(populationSize >= MAX_NODES){
-					System.out.println("reached Max Nodes");
-					throw new Exception();
+					//System.out.println("reached Max Nodes");
+					throw new Exception("reached Max Nodes");
 				} else {
+					Seagrass newNode = null;
 					//this will determine if the node is branching or continuing on its axis
-					//If branching, there is a chance it may not occur
 					if(!node.isApical()){
-						//if(rng.nextInt(100) < 25){
-							//newNodesForTheDay.add(node.createChild(XLENGTH, YLENGTH, runningIDCounter, dayCounter));
-							
-							Seagrass newNode = node.createChild(XLENGTH, YLENGTH, runningIDCounter, dayCounter);
-							newNodesForTheDay.add(newNode);
-							field.getCellFromLocation(node.getLocation()).addSeagrass();
-							runningIDCounter++;
-							numNodesCreatedToday++;
-//						} else {
-//							node.setDevelopmentProgress(0);
-//							node.setDistanceFromMother(0);
-//						}
-					} else {
-						//newNodesForTheDay.add(node.createChild(XLENGTH, YLENGTH, runningIDCounter, dayCounter));
-						
-						Seagrass newNode = node.createChild(XLENGTH, YLENGTH, runningIDCounter, dayCounter);
+						newNode = node.createChild(XLENGTH, YLENGTH, runningIDCounter, dayCounter);
 						newNodesForTheDay.add(newNode);
-						field.getCellFromLocation(newNode.getLocation()).addSeagrass();
-						runningIDCounter++;
-						numNodesCreatedToday++;
+					} else {
+						newNode = node.createChild(XLENGTH, YLENGTH, runningIDCounter, dayCounter);
+						newNodesForTheDay.add(newNode);
 					}
+					field.getCellFromLocation(newNode.getLocation()).addSeagrass();
+					runningIDCounter++;
+					numNodesCreatedToday++;
 				}
 			}
 			
@@ -411,13 +395,7 @@ public class Simulation {
 				cell.setWaterLevel(generateWaterLevel());		//FORTRAN: call waterdepth
 				cell.generateWaterDepth();
 				assignOtherSpecies(cell);
-				assignCellLight(cell);
-				
-//				if(dayCounter == 0){
-//					LIGHTOUTPUT.println("Xlocation: " + currentX + " YLocation: " + currentY + " LightLevel: " + cell.getSeaFloorlight());
-//					LIGHTOUTPUT.flush();
-//				}
-				
+				assignCellLight(cell);				
 			}
 		}
 	}
@@ -507,7 +485,8 @@ public class Simulation {
 	private void calculateWaterLightAttenuation() {
 		if(solarBehavior.isStorming()){
 			//turbid waters
-			// TODO: implement method to determine strength of storm
+			
+			//simple version for now, depends on predetermined storm strength
 			switch (simOptions.getLowerQuartile()){
 			
 			case SolarBehavior.ZERO:
@@ -528,9 +507,9 @@ public class Simulation {
 	}
 	
 	/**
-	 * 
+	 * prints the stats for each of the patches
 	 */
-	private void printDensityForEachPatch(){
+	private void printStatisticsForEachPatch(){
 		HashMap<Integer, Patch> patchIDtoPatchCollectionMap = getPatchesFromPopulation();
 		//System.out.println(patchIDtoPatchCollectionMap);
 		for(Integer patchID: patchIDtoPatchCollectionMap.keySet()){
@@ -547,8 +526,8 @@ public class Simulation {
 	 * Returns an array of patches from the population
 	 * TODO How?
 	 * 		Run though population
-	 * 			put every seagrass into map with patchID as key and queue as the value
-	 * 				add the seagrass to the queue
+	 * 			put every seagrass into map with patchID as key and patch as the value
+	 * 				add the seagrass to the patch
 	 */
 	private HashMap<Integer, Patch> getPatchesFromPopulation(){
 		HashMap<Integer, Patch> patchIDtoPatchCollectionMap = new HashMap<Integer, Patch>();
@@ -576,6 +555,10 @@ public class Simulation {
 
 	public ArrayList<Seagrass> getPopulation() {
 		return population;
+	}
+
+	public void setSimGUI(SimulationGUI simGUI){
+		this.simGUI = simGUI;
 	}
 	
 //	private void setOutputFile(String fileName){

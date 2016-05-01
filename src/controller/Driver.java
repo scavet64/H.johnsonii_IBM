@@ -18,8 +18,6 @@ public class Driver {
 		
 		runTest();
 		System.out.println("Finished Everything! :^)");
-		//Simulation sim = new Simulation();
-		//sim.runSimulation(0, 180);
 	}
 
 	private static void runTest() throws Exception {

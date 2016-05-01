@@ -1,7 +1,5 @@
 package model;
 
-import java.awt.geom.Line2D;
-
 /**
  * The Seagrass class for the Halophila johnsonii individual based model
  * This class represents the attributes that a seagrass individual would have
@@ -26,15 +24,12 @@ public class Seagrass {
 	private final int dayBorn;						//day a node is "born"
 	private int dayDied;							//day a node "dies"
 	private Location location;						//Location where the seagrass is located
-//	private double xCords;							//distance in meters in x direction from left bottom corner of grid
-//	private double yCords;							//distance in meters in y direction from left bottom corner of grid
 	private boolean isApical;						//true if node is on the apical stem
 	private boolean hasBranched;					//true if has branched
 	private final double angleOfCreation;			//angle in radians of node when created - 90 degrees = 1.57 radians
 	private double distanceForNewNode;				//distance according to growth that the new node will be from the parent node
 	private final int motherID;						//id of the mother
 	private double developmentProgress;				//progress until a new node is created
-	//private Line2D.Double parentalConnection;		//connection to its parent
 	private Location childLocation;					//location of its apical child
 	private Location branchChildLocation;			//location of its branched child
 	private GrowthAxis growthAxis;					//the axis of growth for this node 
@@ -63,13 +58,12 @@ public class Seagrass {
 		this.hasBranched = false;
 		this.developmentProgress = 0.0;
 		this.age = 0;
-		//this.parentalConnection = null;
 		this.growthAxis = growthAxis;
 		this.patchID = patchID;
 	}
 	
 	public void growth(double lightValueForDay){
-		//double daysToNode = develop(lightValueForDay);
+		//double daysToNode = develop(lightValueForDay); //old way
 		
 		double daysToNode = growthAxis.getDaysAdded(lightValueForDay * 100);
 		developmentProgress = developmentProgress + (1/daysToNode);
@@ -82,8 +76,12 @@ public class Seagrass {
 	}
 	
 	/**
-	 * Attempting to refactor
-	 * @return newly created Seagrass
+	 * creates a new seagrass child based upon this seagrass information
+	 * @param XLENGTH X length of the field
+	 * @param YLENGTH Y length of the field
+	 * @param runningIDCounter Running ID counter of seagrass children
+	 * @param dayCounter The current day in the simulation
+	 * @return A new Seagrass child
 	 */
 	public Seagrass createChild(int XLENGTH, int YLENGTH, int runningIDCounter, int dayCounter){
 		Seagrass child = null;
@@ -134,45 +132,48 @@ public class Seagrass {
 		return child;
 	}
 	
-//	/**
-//	 * Depreciated as of 3/18/2016 - refactored age++ into growth method
-//	 * Increments the age of the node.
-//	 * @param availableLight
-//	 * @return
-//	 */
-//	public void incrementAge(){
-//		age++;
-//	}
+	@Deprecated
+	/**
+	 * Depreciated as of 3/18/2016 - refactored age++ into growth method
+	 * Increments the age of the node.
+	 * @param availableLight
+	 * @return
+	 */
+	public void incrementAge(){
+		age++;
+	}
 	
-//	private double develop(double availableLight){
-////		  This function relates development time towards producing a
-////		      new node to the light level in a cell
-////		
-////		 TableCurve D:\seagrass\days.f90 Dec 18, 2007 3:52:04 PM 
-////		  
-////		 X=  
-////		 Y=  
-////		 Eqn# 8002  Exponential(a,b,c) 
-////		 r2=0.999851595076407D0 
-////		 r2adj=0.999554785229221D0 
-////		 StdErr=0.0693848378347615D0 
-////		 Fval=3368.660455695716D0 
-////		 a= 8.151507772603294D0 
-////		 b= 6.849203199969538D0 
-////		 c= 14.26707601933104D0 
-////		 Constraint: c<>0 
-////		-----------------------------------------------------------
-////		  REAL*8 x,y
-////		  y=8.151507772603294D0+6.849203199969538D0*DEXP(-x/&
-////		   &14.26707601933104D0) 
-////		  develop=y
-////		  RETURN
-////		END
-//		availableLight *= 100; //TODO Is this right?
-//		double y = 8.151507772603294 + 6.849203199969538 * Math.exp((-availableLight)/14.26707601933104);
-//		return y;
-//	
-//	}
+	@SuppressWarnings("unused")
+	@Deprecated
+	private double develop(double availableLight){
+//		  This function relates development time towards producing a
+//		      new node to the light level in a cell
+//		
+//		 TableCurve D:\seagrass\days.f90 Dec 18, 2007 3:52:04 PM 
+//		  
+//		 X=  
+//		 Y=  
+//		 Eqn# 8002  Exponential(a,b,c) 
+//		 r2=0.999851595076407D0 
+//		 r2adj=0.999554785229221D0 
+//		 StdErr=0.0693848378347615D0 
+//		 Fval=3368.660455695716D0 
+//		 a= 8.151507772603294D0 
+//		 b= 6.849203199969538D0 
+//		 c= 14.26707601933104D0 
+//		 Constraint: c<>0 
+//		-----------------------------------------------------------
+//		  REAL*8 x,y
+//		  y=8.151507772603294D0+6.849203199969538D0*DEXP(-x/&
+//		   &14.26707601933104D0) 
+//		  develop=y
+//		  RETURN
+//		END
+		availableLight *= 100; //TODO Is this right?
+		double y = 8.151507772603294 + 6.849203199969538 * Math.exp((-availableLight)/14.26707601933104);
+		return y;
+	
+	}
 
 
 	private double distance(double availableLight){

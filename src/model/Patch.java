@@ -8,7 +8,7 @@ import controller.Simulation;
 
 public class Patch {
 	
-	private LinkedBlockingQueue<Seagrass> patch;
+	private Queue<Seagrass> patch;
 	private int patchID;
 	
 	private double densityMean;
@@ -26,7 +26,7 @@ public class Patch {
 		this.patchID = patchID;
 	}
 	
-	public Patch(LinkedBlockingQueue<Seagrass> patch){
+	public Patch(Queue<Seagrass> patch){
 		this.patch = patch;
 	}
 	
@@ -149,14 +149,14 @@ public class Patch {
 	/**
 	 * @return the patch
 	 */
-	public LinkedBlockingQueue<Seagrass> getPatch() {
+	public Queue<Seagrass> getPatch() {
 		return patch;
 	}
 
 	/**
 	 * @param patch the patch to set
 	 */
-	public void setPatch(LinkedBlockingQueue<Seagrass> patch) {
+	public void setPatch(Queue<Seagrass> patch) {
 		this.patch = patch;
 	}
 

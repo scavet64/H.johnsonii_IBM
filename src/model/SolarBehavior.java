@@ -1,10 +1,16 @@
 package model;
 
-import java.util.HashMap;
 import java.util.Random;
 
+/**
+ * SolarBehavior class is responsible for holding, retrieving, and calculating information relevant to the solar behavior in Miami Florida
+ * 
+ * @author Vincent Scavetta
+ * @version 5/1/2016
+ */
 public class SolarBehavior {
 
+	//months
 	public static final Integer JAN = 0;
 	public static final Integer FEB = 1;
 	public static final Integer MAR = 2;
@@ -18,23 +24,23 @@ public class SolarBehavior {
 	public static final Integer NOV = 10;
 	public static final Integer DEC = 11;
 	
+	//quartile values
 	public static final int ZERO = 0;
 	public static final int TWENTYFIVE = 1;
 	public static final int FIFTY = 2;
 	public static final int SEVENTYFIVE = 3;
 	public static final int ONEHUNDRED = 4;
 	
-	private int numberMonths = 12;
-	private int numberQuantiles = 5;
-	private int previousLowerQuantile = 0;
+	//not used as of april 28th
+	//can be used for random lengths of storms
+//	private int previousLowerQuantile = 0;
+//	private int stormCounter;	
 	
 	private boolean isStorming;
-	private int stormCounter;
-	
 	private Random rng = new Random();
 	
-	
-	//private HashMap<Integer, SolarQuantile> monthToSolarQuantileMap = new HashMap<Integer, SolarQuantile>();
+	private int numberMonths = 12;
+	private int numberQuantiles = 5;
 	private double[][] irradianceTable = new double[numberMonths][numberQuantiles];
 	private int[] daysInMonthArray = {31,28,31,30,31,30,31,31,30,31,30,31};
 	
@@ -56,7 +62,6 @@ public class SolarBehavior {
 		
 		int lowerQuantile = getLowerQuantileForDay(day);
 		int upperQuantile = lowerQuantile + 1;
-		
 		
 		double upperQuantileIrradiance = irradianceTable[month][upperQuantile];
 		double lowerQuantileIrradiance = irradianceTable[month][lowerQuantile];
@@ -80,7 +85,7 @@ public class SolarBehavior {
 		int stormFreq = simOpt.getFrequencyOfStorms();
 		
 		if(day % stormFreq == 0){
-			//stormy day every 15 days (approx 2 per month)
+			//stormy day every X days
 			lowerQuantile = simOpt.getLowerQuartile();
 			isStorming = true;
 		} else {
@@ -108,6 +113,12 @@ public class SolarBehavior {
 		return irradianceTable[getMonthFromDay(day)][quantile];
 	}
 	
+	/**
+	 * returns the current integer value of the month for the passed in day
+	 * Based upon a year with no leap day
+	 * @param day current day
+	 * @return the current integer value for the month
+	 */
 	private int getMonthFromDay(int day){
 		int month = 0;
 		
@@ -118,10 +129,17 @@ public class SolarBehavior {
 		return month;
 	}
 	
+	/**
+	 * returns if the current simulation is storming
+	 * @return true if storming
+	 */
 	public boolean isStorming() {
 		return isStorming;
 	}
 
+	/**
+	 * Tables is created based upon the miami solar data collected from NOAA
+	 */
 	private void createTable(){
 		
 		irradianceTable[JAN][ZERO] 			= 0.424;
