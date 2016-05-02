@@ -14,9 +14,9 @@ public class Driver {
 
 	public static void main(String[] args) throws Exception {
 		System.setProperty("sun.java2d.opengl", "true");
-		//MainGUI menuGUI = new MainGUI();
+		MainGUI menuGUI = new MainGUI();
 		
-		runTest();
+		//runTest();
 		System.out.println("Finished Everything! :^)");
 	}
 

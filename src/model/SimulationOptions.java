@@ -11,7 +11,7 @@ public class SimulationOptions {
 	private int maxNodes = 9000000;			//Maximum number of nodes for the simulation
 	private static SimulationOptions singleInstance;
 	private int lowerQuartile = SolarBehavior.ZERO;
-	private int frequencyOfStorms = 0;
+	private int frequencyOfStorms = 1;
 	
 	//testing Options
 //	private int numRecruits = 0;			//number of starting nodes
